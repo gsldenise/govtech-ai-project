@@ -137,27 +137,15 @@
                 <button class="secondary" style="width: 100%; margin-top: 16px;" onclick="restart()">Start Over</button>
             </div>
 
-            <!-- Step 4: Pre-Checker Expectations -->
+            <!-- Step 4: Requirement Summary -->
             <div id="step-4" class="hidden">
-                <div class="section-title">What do you think you need?</div>
-                <div class="question">Before we show you the official requirements, what documents do you think you'll need to bring?</div>
-                <div class="form-group">
-                    <label>Your answer (synthetic scenario only)</label>
-                    <input type="text" id="preCheckerAnswer" placeholder="E.g., my ID and a photo" value="">
-                </div>
-                <button class="primary" style="width: 100%;" onclick="goToStep(5)">Next: Official Requirements</button>
-            </div>
-
-            <!-- Step 5: Requirement Summary -->
-            <div id="step-5" class="hidden">
                 <div class="section-title">What you actually need</div>
-                <div id="expectationGap"></div>
                 <div id="summary-box"></div>
-                <button class="primary" style="width: 100%;" onclick="goToStep(6)">Next: Test Your Understanding</button>
+                <button class="primary" style="width: 100%;" onclick="goToStep(4)">Next: Test Your Understanding</button>
             </div>
 
-            <!-- Step 6: Clarity Checkpoint -->
-            <div id="step-6" class="hidden">
+            <!-- Step 5: Clarity Checkpoint -->
+            <div id="step-5" class="hidden">
                 <div class="section-title">Can you remember?</div>
                 <div class="question">Without looking back at the list, walk me through what you'll prepare before submitting:</div>
                 <div class="form-group">
@@ -171,7 +159,7 @@
             </div>
 
             <!-- Step 7: Application Form -->
-            <div id="step-7" class="hidden">
+            <div id="step-5" class="hidden">
                 <div class="section-title">Your details (synthetic scenario)</div>
                 <div class="form-group">
                     <label>Your name</label>
@@ -191,24 +179,24 @@
                         <input type="text" id="childDOB" value="15 Jan 2022" placeholder="DD Mon YYYY">
                     </div>
                 </div>
-                <button class="primary" style="width: 100%;" onclick="step = 8; renderStep();">Next: Submit Documents</button>
+                <button class="primary" style="width: 100%;" onclick="step = 6; renderStep();">Next: Submit Documents</button>
             </div>
 
             <!-- Step 8: Document Submission -->
-            <div id="step-8" class="hidden">
+            <div id="step-5" class="hidden">
                 <div class="section-title">Submit your documents</div>
                 <div id="docSubmissionForm"></div>
                 <button class="primary" style="width: 100%;" onclick="validateDocuments()">Review & Submit</button>
             </div>
 
             <!-- Step 9: Pre-Submission Validation with Context -->
-            <div id="step-9" class="hidden">
+            <div id="step-5" class="hidden">
                 <div class="section-title">Pre-Submission Check</div>
                 <div id="validationResult"></div>
             </div>
 
             <!-- Step 10: Outcome with Context & Metrics -->
-            <div id="step-10" class="hidden">
+            <div id="step-5" class="hidden">
                 <div id="outcomeBox"></div>
                 <button class="primary" style="width: 100%; margin-top: 16px;" onclick="restart()">Start Over</button>
             </div>
@@ -217,7 +205,7 @@
 
     <script>
         let state = {
-            type: '', applicant: '', edgeCase: '', preCheckerAnswer: '', requirements: null,
+            type: '', applicant: '', edgeCase: '', requirements: null,
             clarityPass: false, docs: {}, validationIssues: [], outcome: '', context: ''
         };
         let step = 1;
@@ -251,8 +239,8 @@
             if (step === 3.5) document.getElementById('step-3b').classList.remove('hidden');
             updateProgress();
 
-            if (step === 4) showPreCheckerPrompt();
-            if (step === 5) showSummary();
+            
+            if (step === 4) showSummary();
             if (step === 7) showForm();
             if (step === 8) showDocSubmissionForm();
             if (step === 9) showValidation();
@@ -264,7 +252,7 @@
         }
 
         function showSummary() {
-            state.preCheckerAnswer = document.getElementById('preCheckerAnswer').value;
+            
             state.context = `${state.type}-${state.applicant}`;
 
             const summaries = {
@@ -285,13 +273,6 @@
             };
             const s = summaries[state.context] || { title: 'Unknown scenario', identity: [], supporting: [], fees: [], expectations: [] };
             state.requirements = s;
-
-            // Show expectation gap
-            let gapHtml = '<div class="gap-box">';
-            gapHtml += '<div class="gap-title">You thought:</div>';
-            gapHtml += `<div class="gap-text">"${state.preCheckerAnswer || '(no answer provided)'}"</div>`;
-            gapHtml += '</div>';
-            document.getElementById('expectationGap').innerHTML = gapHtml;
 
             // Show actual requirements
             let html = `<div class="summary"><div class="summary-title">What you need: ${s.title}</div>`;
@@ -338,7 +319,7 @@
             const coreTerms = ['birth', 'certificate', 'photo', 'nric', 'singpass', 'passport', 'consent'];
             const mentionedTerms = coreTerms.filter(term => answer.includes(term)).length;
             state.clarityPass = mentionedTerms >= 2;
-            goToStep(7);
+            goToStep(5);
         }
 
         function validateDocuments() {
@@ -418,9 +399,9 @@
         function recordOutcome(outcome) {
             state.outcome = outcome;
             if (outcome === 'fixed_documents') {
-                step = 8;
+                step = 6;
             } else {
-                step = 10;
+                step = 8;
             }
             renderStep();
         }
@@ -496,15 +477,15 @@
         }
 
         function updateProgress() {
-            const labels = ['Type', 'Applicant', 'Edge case', 'Pre-check', 'Summary', 'Clarity', 'Form', 'Documents', 'Validate', 'Done'];
+            const labels = ['Type', 'Applicant', 'Edge case', 'Summary', 'Clarity', 'Form', 'Documents', 'Validate', 'Done'];
             const stepMap = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 3.5: 2};
             const idx = stepMap[step] || 0;
-            document.getElementById('progress').textContent = `Step ${step <= 3.5 ? Math.ceil(step) : Math.floor(step)} of 10: ${labels[idx]}`;
+            document.getElementById('progress').textContent = `Step ${step <= 3.5 ? Math.ceil(step) : Math.floor(step)} of 9: ${labels[idx]}`;
         }
 
         function restart() {
             state = {
-                type: '', applicant: '', edgeCase: '', preCheckerAnswer: '', requirements: null,
+                type: '', applicant: '', edgeCase: '', requirements: null,
                 clarityPass: false, docs: {}, validationIssues: [], outcome: '', context: ''
             };
             step = 1;
