@@ -56,6 +56,8 @@ Applicants submit incomplete or incorrect applications because they do not know 
 - Only 38% of applicants read the guidance before starting their application.
 - Parents applying for a child account for an estimated 34% of all returns, despite making up roughly 20% of total applications.
 - The top three return reasons are: missing supporting document (41%), photo non-compliance (28%), incomplete or mismatched form fields (18%).
+- ICA's standard processing time is 1–2 weeks; each return delays this by an additional 6+ days.
+- Application fees: $70 for online application (adult or child renewal standard case).
 
 ## Hypothesis
 

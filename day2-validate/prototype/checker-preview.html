@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICA Passport Requirements Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 16px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #0066cc;
+            color: white;
+            padding: 20px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 24px;
+            min-height: 300px;
+        }
+        .question { font-size: 16px; font-weight: 500; margin-bottom: 20px; color: #333; }
+        .button-group { display: flex; flex-direction: column; gap: 12px; }
+        button {
+            padding: 12px 16px;
+            border: 2px solid #0066cc;
+            background: white;
+            color: #0066cc;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button:hover { background: #0066cc; color: white; }
+        .summary { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 16px; }
+        .summary-title { background: #f0f0f0; padding: 12px 16px; font-weight: 600; border-bottom: 1px solid #e0e0e0; }
+        .summary-section { padding: 12px 16px; border-bottom: 1px solid #e0e0e0; }
+        .summary-section:last-child { border-bottom: none; }
+        .section-label { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; margin-bottom: 8px; }
+        .section-items { font-size: 13px; line-height: 1.6; color: #333; }
+        .section-items li { margin-left: 16px; margin-bottom: 4px; }
+        .footer { font-size: 11px; color: #666; border-top: 1px solid #e0e0e0; padding: 12px 16px; margin-top: 0; }
+        .reset-btn { background: #f0f0f0; border-color: #ccc; margin-top: 16px; width: 100%; }
+        .progress { font-size: 12px; color: #999; margin-bottom: 16px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">ICA Passport Requirements Checker</div>
+        <div class="content">
+            <div class="progress" id="progress"></div>
+            <div id="q1">
+                <div class="question">Is this your first passport application, or a renewal?</div>
+                <div class="button-group">
+                    <button onclick="answer1('first')">First time applying</button>
+                    <button onclick="answer1('renewal')">Renewal</button>
+                </div>
+            </div>
+            <div id="q2" class="hidden">
+                <div class="question">Are you applying for yourself or a child?</div>
+                <div class="button-group">
+                    <button onclick="answer2('self')">Myself</button>
+                    <button onclick="answer2('child')">My child</button>
+                </div>
+            </div>
+            <div id="q3" class="hidden">
+                <div class="question">Is this a standard case or something special?</div>
+                <div class="button-group">
+                    <button onclick="answer3('standard')">Standard renewal</button>
+                    <button onclick="answer3('special')">Name change, lost, or damaged</button>
+                </div>
+            </div>
+            <div id="result" class="hidden">
+                <div id="result-content"></div>
+                <button class="reset-btn" onclick="doReset()">Start over</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = { type: '', applicant: '', caseType: '' };
+
+        function answer1(val) {
+            state.type = val;
+            document.getElementById('q1').classList.add('hidden');
+            document.getElementById('q2').classList.remove('hidden');
+            document.getElementById('progress').innerHTML = 'Step 2 of 3';
+        }
+
+        function answer2(val) {
+            state.applicant = val;
+            document.getElementById('q2').classList.add('hidden');
+            document.getElementById('q3').classList.remove('hidden');
+            document.getElementById('progress').innerHTML = 'Step 3 of 3';
+        }
+
+        function answer3(val) {
+            state.caseType = val;
+            showOutput();
+        }
+
+        function getOutput() {
+            const key = state.type + '-' + state.applicant + '-' + state.caseType;
+            const data = {
+                'first-self-standard': {
+                    title: 'What you need: First-time adult passport, Singapore citizen',
+                    identity: ['Your original NRIC or equivalent', 'Passport-sized photo (4x6 cm)'],
+                    supporting: ['Birth certificate or Certificate of Citizenship', 'Proof of Singapore address (utility bill, lease, bank statement)'],
+                    fees: ['$60 for 5-year passport', 'Payment via credit card, debit card, or PayNow'],
+                    expectations: ['Processing: 4 weeks standard, 1 week expedited', 'Collection in person at ICA office']
+                },
+                'renewal-self-standard': {
+                    title: 'What you need: Adult passport renewal (16+), standard case',
+                    identity: ['Your Singpass login', 'Your NRIC number', 'Digital colour passport photo taken within last 3 months'],
+                    supporting: ['Current passport number and expiry date', 'Full name, date of birth, sex', 'Contact details', 'Reason for renewal (expiring, expired, or out of pages)'],
+                    fees: ['$70 online application fee', 'Payment via credit card, debit card, or PayNow'],
+                    expectations: ['Processing time: approximately 1–2 weeks', 'Passport valid for 10 years', 'Photo must be 400 × 514 pixels, JPG/JPEG/PNG/HEIC/HEIF, max 8 MB']
+                },
+                'renewal-child-standard': {
+                    title: 'What you need: Child passport renewal (under 16), one parent applying',
+                    identity: ['Child birth certificate or citizenship certificate', 'Digital colour passport photo taken within last 3 months', 'Your Singpass login'],
+                    supporting: ['Child current passport (if any)', 'Your NRIC or valid passport for collection', 'Parental consent (required for under 16)', 'Child personal details: full name, date of birth, sex'],
+                    fees: ['$70 online application fee', 'Payment via credit card, debit card, or PayNow'],
+                    expectations: ['Processing time: 1–2 weeks', 'Children 6+ must collect passport in person', 'Children under 6 can be collected by parent/guardian', 'Passport valid for 5 years (can carry over up to 9 months remaining validity from previous passport)']
+                },
+                'renewal-self-special': {
+                    title: 'What you need: Adult passport — special case (name change, lost, damaged)',
+                    identity: ['Your original NRIC', 'Photo (4x6 cm)', 'Marriage/divorce cert if name changed', 'Police report if lost/stolen'],
+                    supporting: ['Address proof', 'Document supporting name change if applicable'],
+                    fees: ['$60 for replacement', 'Higher fees for expedited'],
+                    expectations: ['Special cases reviewed by officer', 'Processing: 4–6 weeks', 'May need in-person visit or more docs']
+                }
+            };
+            return data[key] || { title: 'Passport requirements', identity: ['Details TBD'], supporting: ['Contact ICA'], fees: ['TBD'], expectations: ['TBD'] };
+        }
+
+        function showOutput() {
+            const r = getOutput();
+            let html = '<div class="summary">';
+            html += '<div class="summary-title">' + r.title + '</div>';
+            html += '<div class="summary-section"><div class="section-label">Identity Documents</div><div class="section-items"><ul>';
+            r.identity.forEach(item => { html += '<li>' + item + '</li>'; });
+            html += '</ul></div></div>';
+            html += '<div class="summary-section"><div class="section-label">Supporting Documents</div><div class="section-items"><ul>';
+            r.supporting.forEach(item => { html += '<li>' + item + '</li>'; });
+            html += '</ul></div></div>';
+            html += '<div class="summary-section"><div class="section-label">Fees</div><div class="section-items"><ul>';
+            r.fees.forEach(item => { html += '<li>' + item + '</li>'; });
+            html += '</ul></div></div>';
+            html += '<div class="summary-section"><div class="section-label">What to Expect</div><div class="section-items"><ul>';
+            r.expectations.forEach(item => { html += '<li>' + item + '</li>'; });
+            html += '</ul></div></div>';
+            html += '<div class="footer">This is a guide only. ICA officers make all final decisions. Requirements accurate as of 18 November 2026.</div>';
+            html += '</div>';
+
+            document.getElementById('result-content').innerHTML = html;
+            document.getElementById('q3').classList.add('hidden');
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('progress').innerHTML = '';
+        }
+
+        function doReset() {
+            state = { type: '', applicant: '', caseType: '' };
+            document.getElementById('q1').classList.remove('hidden');
+            document.getElementById('q2').classList.add('hidden');
+            document.getElementById('q3').classList.add('hidden');
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('progress').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
