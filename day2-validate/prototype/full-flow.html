@@ -3,470 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICA Passport Application Flow</title>
+    <title>ICA Passport Application Checker</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
         .container {
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
         .header {
-            background: #0066cc;
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
             color: white;
-            padding: 20px;
-            font-weight: 600;
-            font-size: 16px;
+            padding: 32px 24px;
+            text-align: center;
+        }
+        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+        .header p { font-size: 13px; opacity: 0.9; }
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            margin-top: 16px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s ease;
         }
         .content {
-            padding: 24px;
+            padding: 40px 32px;
             min-height: 400px;
         }
-        .progress { font-size: 12px; color: #999; margin-bottom: 20px; }
-        .section-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 16px; }
-        .question { font-size: 14px; font-weight: 500; margin-bottom: 16px; color: #333; }
-        .button-group { display: flex; flex-direction: column; gap: 12px; }
-        button {
-            padding: 12px 16px;
-            border: 2px solid #0066cc;
+        .step-label { font-size: 12px; font-weight: 600; color: #999; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
+        .question { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 28px; line-height: 1.4; }
+        .option-group { display: grid; gap: 12px; }
+        .option-btn {
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
             background: white;
-            color: #0066cc;
-            border-radius: 4px;
+            color: #333;
+            border-radius: 8px;
             font-weight: 500;
+            font-size: 15px;
             cursor: pointer;
-            font-size: 14px;
+            transition: all 0.2s ease;
+            text-align: left;
         }
-        button:hover { background: #0066cc; color: white; }
-        button.primary { background: #0066cc; color: white; }
-        button.danger { border-color: #d32f2f; color: #d32f2f; }
-        button.danger:hover { background: #d32f2f; color: white; }
-        button.secondary { border-color: #666; color: #666; }
-        button.secondary:hover { background: #666; color: white; }
-        .summary { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 16px; }
-        .summary-title { background: #f0f0f0; padding: 12px 16px; font-weight: 600; border-bottom: 1px solid #e0e0e0; }
-        .summary-section { padding: 12px 16px; border-bottom: 1px solid #e0e0e0; }
-        .summary-section:last-child { border-bottom: none; }
-        .section-label { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; margin-bottom: 8px; }
-        .section-items { font-size: 13px; line-height: 1.6; color: #333; }
-        .section-items li { margin-left: 16px; margin-bottom: 4px; }
-        .footer { font-size: 11px; color: #666; border-top: 1px solid #e0e0e0; padding-top: 12px; margin-top: 12px; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
-        .form-group input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        .warning { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
-        .warning-title { font-weight: 600; color: #856404; margin-bottom: 8px; }
-        .warning-text { font-size: 13px; color: #856404; }
-        .error { background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
-        .error-title { font-weight: 600; color: #721c24; margin-bottom: 8px; }
-        .error-text { font-size: 13px; color: #721c24; }
+        .option-btn:hover { border-color: #0066cc; background: #f9f9f9; }
+        .option-btn.selected { border-color: #0066cc; background: #0066cc; color: white; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+        }
+        .section-title { font-size: 14px; font-weight: 600; color: #666; text-transform: uppercase; margin: 24px 0 16px 0; letter-spacing: 0.5px; }
+        .requirements-list { list-style: none; padding: 0; }
+        .requirements-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+        .requirements-list li:before { content: "✓"; color: #4CAF50; font-weight: bold; margin-right: 12px; font-size: 16px; }
+        .requirements-list li:last-child { border-bottom: none; }
+        .button-group { display: flex; gap: 12px; margin-top: 32px; }
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary { background: #0066cc; color: white; }
+        .btn-primary:hover { background: #0052a3; }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .btn-danger { background: #d32f2f; color: white; }
+        .btn-danger:hover { background: #b71c1c; }
+        .success-box { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .success-box h3 { color: #155724; font-size: 16px; margin-bottom: 8px; }
+        .success-box p { color: #155724; font-size: 14px; }
+        .error-box { background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .error-box h3 { color: #721c24; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+        .error-item { color: #721c24; font-size: 13px; margin-bottom: 8px; padding-left: 24px; position: relative; }
+        .error-item:before { content: "•"; position: absolute; left: 8px; }
         .hidden { display: none; }
-        .success { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 12px; }
-        .success-title { font-weight: 600; color: #155724; margin-bottom: 8px; }
-        .success-text { font-size: 13px; color: #155724; }
-        .doc-item { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
-        .doc-label { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px; }
-        .doc-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
-        .issues-list { background: #f9f9f9; border-left: 4px solid #d32f2f; padding: 12px; margin-bottom: 16px; }
-        .issue-item { font-size: 13px; margin-bottom: 8px; padding: 8px; background: white; border-radius: 3px; }
-        .issue-title { font-weight: 600; color: #721c24; margin-bottom: 4px; }
-        .issue-reason { font-size: 12px; color: #666; }
-        .gap-box { background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
-        .gap-title { font-weight: 600; color: #004085; margin-bottom: 8px; font-size: 13px; }
-        .gap-text { font-size: 12px; color: #004085; line-height: 1.5; }
-        .metric-box { background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
-        .metric-label { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; margin-bottom: 6px; }
-        .metric-value { font-size: 18px; font-weight: 700; color: #333; }
-        .metric-note { font-size: 11px; color: #666; margin-top: 6px; }
-        .escalation-box { background: #fff3cd; border: 2px solid #ffc107; border-radius: 4px; padding: 16px; }
-        .escalation-title { font-weight: 600; color: #856404; font-size: 14px; margin-bottom: 8px; }
-        .escalation-text { font-size: 13px; color: #856404; line-height: 1.6; }
+        .metric-box { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .metric-label { font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .metric-value { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 8px; }
+        .metric-note { font-size: 12px; color: #666; line-height: 1.5; }
+        .escalation-box { background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 24px; text-align: center; }
+        .escalation-box h2 { color: #856404; font-size: 18px; margin-bottom: 12px; }
+        .escalation-box p { color: #856404; font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
+        .escalation-box a { color: #0066cc; text-decoration: none; font-weight: 600; }
+        .doc-field { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+        .doc-field label { font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block; }
+        .doc-field input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .doc-field input:focus { outline: none; border-color: #0066cc; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">ICA Passport Application</div>
+        <div class="header">
+            <h1>ICA Passport Checker</h1>
+            <p>Verify what you need before applying</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
         <div class="content">
-            <div class="progress" id="progress"></div>
-
-            <!-- Step 1: Application Type -->
-            <div id="step-1">
-                <div class="question">Is this your first passport application, or a renewal?</div>
-                <div class="button-group">
-                    <button onclick="goToStep(2, 'renewal')">Renewal</button>
-                    <button onclick="goToStep(2, 'first')">First time applying</button>
+            <div id="step-1" class="hidden">
+                <div class="step-label">Step 1 of 5</div>
+                <div class="question">Tell us about your application</div>
+                <div class="option-group">
+                    <button class="option-btn" onclick="selectScenario('renewal', 'self')">
+                        <strong>Renewing my own passport</strong><br>
+                        <span style="font-size: 12px; color: #666;">I already have a passport</span>
+                    </button>
+                    <button class="option-btn" onclick="selectScenario('renewal', 'child')">
+                        <strong>Renewing my child's passport</strong><br>
+                        <span style="font-size: 12px; color: #666;">Applying on behalf of a child (under 16)</span>
+                    </button>
+                    <button class="option-btn" onclick="selectScenario('first', 'self')">
+                        <strong>Applying for my first passport</strong><br>
+                        <span style="font-size: 12px; color: #666;">I've never had a passport before</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Step 2: Applicant Type -->
-            <div id="step-2" class="hidden">
-                <div class="question">Are you applying for yourself or a child?</div>
-                <div class="button-group">
-                    <button onclick="goToStep(3, 'self')">Myself</button>
-                    <button onclick="goToStep(3, 'child')">My child</button>
+            <div id="step-1b" class="hidden">
+                <div class="step-label">Step 1 of 5</div>
+                <div class="question">Special circumstances?</div>
+                <div class="option-group">
+                    <button class="option-btn" onclick="proceedToRequirements('standard')">
+                        <strong>None of these apply</strong><br>
+                        <span style="font-size: 12px; color: #666;">Standard application</span>
+                    </button>
+                    <button class="option-btn" onclick="escalateCase('overseas')">
+                        <strong>Applying from overseas</strong><br>
+                        <span style="font-size: 12px; color: #666;">I'm outside Singapore</span>
+                    </button>
+                    <button class="option-btn" onclick="escalateCase('lost')">
+                        <strong>Passport lost or stolen</strong><br>
+                        <span style="font-size: 12px; color: #666;">Needs special handling</span>
+                    </button>
+                    <button class="option-btn" onclick="escalateCase('namechange')">
+                        <strong>Name change</strong><br>
+                        <span style="font-size: 12px; color: #666;">Name has changed since last passport</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Step 3: Edge Case Detection -->
-            <div id="step-3" class="hidden">
-                <div class="question">Does any of this apply to your situation?</div>
-                <div class="button-group">
-                    <button onclick="goToStep(4, 'standard')">None of these</button>
-                    <button onclick="escalateEdgeCase('overseas')">I'm applying from overseas</button>
-                    <button onclick="escalateEdgeCase('lost')">The passport was lost or stolen</button>
-                    <button onclick="escalateEdgeCase('namechange')">There's a name change</button>
-                </div>
-            </div>
-
-            <!-- Step 3b: Edge Case Escalation -->
-            <div id="step-3b" class="hidden">
+            <div id="step-escalation" class="hidden">
                 <div class="escalation-box">
-                    <div class="escalation-title">Your situation needs officer review</div>
-                    <div class="escalation-text">
-                        <span id="escalationReason"></span>
-                        <br><br>
-                        Please contact ICA directly to discuss your application. An officer will help you with the specific documents and steps needed.
-                    </div>
+                    <h2>⚠ Contact ICA Officer</h2>
+                    <p id="escalationMsg"></p>
+                    <p>Your situation requires special handling.</p>
+                    <p><a href="https://www.ica.gov.sg/contact" target="_blank">Contact ICA →</a></p>
+                    <button class="btn btn-secondary" style="margin-top: 16px; width: 100%;" onclick="restart()">Start Over</button>
                 </div>
-                <button class="secondary" style="width: 100%; margin-top: 16px;" onclick="restart()">Start Over</button>
             </div>
 
-            <!-- Step 4: Requirement Summary -->
+            <div id="step-2" class="hidden">
+                <div class="step-label">Step 2 of 5</div>
+                <div class="question">Required documents</div>
+                <div id="requirementsSummary"></div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="goToStep(3)">Continue</button>
+            </div>
+
+            <div id="step-3" class="hidden">
+                <div class="step-label">Step 3 of 5</div>
+                <div class="question">Your details</div>
+                <div id="applicationForm"></div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="goToStep(4)">Next: Submit Documents</button>
+            </div>
+
             <div id="step-4" class="hidden">
-                <div class="section-title">What you actually need</div>
-                <div id="summary-box"></div>
-                <button class="primary" style="width: 100%;" onclick="goToStep(4)">Next: Test Your Understanding</button>
+                <div class="step-label">Step 4 of 5</div>
+                <div class="question">Submit your documents</div>
+                <div id="documentForm"></div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="validateDocuments()">Review Application</button>
             </div>
 
-            <!-- Step 5: Clarity Checkpoint -->
-            <!-- Step 7: Application Form -->
             <div id="step-5" class="hidden">
-                <div class="section-title">Your details (synthetic scenario)</div>
-                <div class="form-group">
-                    <label>Your name</label>
-                    <input type="text" id="parentName" value="Sarah Tan" placeholder="Your name">
-                </div>
-                <div class="form-group">
-                    <label>Your NRIC</label>
-                    <input type="text" id="parentNRIC" value="S1234567A" placeholder="S + 7 digits + letter">
-                </div>
-                <div id="childForm" class="hidden">
-                    <div class="form-group">
-                        <label>Child's name</label>
-                        <input type="text" id="childName" value="Alex Tan" placeholder="Child's name">
-                    </div>
-                    <div class="form-group">
-                        <label>Child's date of birth</label>
-                        <input type="text" id="childDOB" value="15 Jan 2022" placeholder="DD Mon YYYY">
-                    </div>
-                </div>
-                <button class="primary" style="width: 100%;" onclick="step = 5; renderStep();">Next: Submit Documents</button>
-            </div>
-
-            <!-- Step 8: Document Submission -->
-            <div id="step-5" class="hidden">
-                <div class="section-title">Submit your documents</div>
-                <div id="docSubmissionForm"></div>
-                <button class="primary" style="width: 100%;" onclick="validateDocuments()">Review & Submit</button>
-            </div>
-
-            <!-- Step 9: Pre-Submission Validation with Context -->
-            <div id="step-5" class="hidden">
-                <div class="section-title">Pre-Submission Check</div>
-                <div id="validationResult"></div>
-            </div>
-
-            <!-- Step 10: Outcome with Context & Metrics -->
-            <div id="step-5" class="hidden">
-                <div id="outcomeBox"></div>
-                <button class="primary" style="width: 100%; margin-top: 16px;" onclick="restart()">Start Over</button>
+                <div id="outcomeContent"></div>
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 24px;" onclick="restart()">Start Over</button>
             </div>
         </div>
     </div>
 
     <script>
         let state = {
-            type: '', applicant: '', edgeCase: '', requirements: null,
-            docs: {}, validationIssues: [], outcome: '', context: ''
+            type: '', applicant: '', edgeCase: '', context: '',
+            requirements: null, docs: {}, validationIssues: [], outcome: null
         };
         let step = 1;
 
-        function goToStep(nextStep, choice) {
-            if (step === 1) state.type = choice;
-            if (step === 2) state.applicant = choice;
-            if (step === 3) state.edgeCase = choice;
+        function selectScenario(type, applicant) {
+            state.type = type;
+            state.applicant = applicant;
+            step = '1b';
+            renderStep();
+        }
 
+        function escalateCase(caseType) {
+            state.edgeCase = caseType;
+            const msgs = {
+                'overseas': 'Overseas applicants must provide additional documentation. Processing may take longer.',
+                'lost': 'Lost or stolen passports require a police report. ICA officers will guide you.',
+                'namechange': 'Name changes require supporting documents (marriage cert, court order). Please contact ICA.'
+            };
+            document.getElementById('escalationMsg').textContent = msgs[caseType];
+            step = 'escalation';
+            renderStep();
+        }
+
+        function proceedToRequirements(edge) {
+            state.edgeCase = edge;
+            state.context = `${state.type}-${state.applicant}`;
+            step = 2;
+            renderStep();
+        }
+
+        function goToStep(nextStep) {
             step = nextStep;
             renderStep();
         }
 
-        function escalateEdgeCase(type) {
-            state.edgeCase = type;
-            const reasons = {
-                'overseas': 'Overseas applicants must provide additional documentation and may face different processing times.',
-                'lost': 'Lost or stolen passports require a police report and special handling.',
-                'namechange': 'Name changes require supporting documents (marriage cert, court order) and officer review.'
-            };
-            document.getElementById('escalationReason').textContent = reasons[type];
-            step = 3.5;
-            renderStep();
-        }
-
         function renderStep() {
-            for (let i = 1; i <= 10; i++) {
-                document.getElementById(`step-${i}`)?.classList.add('hidden');
-            }
-            document.getElementById(`step-${Math.floor(step)}`)?.classList.remove('hidden');
-            if (step === 3.5) document.getElementById('step-3b').classList.remove('hidden');
-            updateProgress();
+            for (let i = 1; i <= 5; i++) document.getElementById(`step-${i}`)?.classList.add('hidden');
+            document.getElementById('step-1b')?.classList.add('hidden');
+            document.getElementById('step-escalation')?.classList.add('hidden');
 
-            
-            if (step === 4) showSummary();
-            if (step === 7) showForm();
-            if (step === 8) showDocSubmissionForm();
-            if (step === 9) showValidation();
-            if (step === 10) showOutcome();
+            if (step === 1) document.getElementById('step-1').classList.remove('hidden');
+            else if (step === '1b') document.getElementById('step-1b').classList.remove('hidden');
+            else if (step === 'escalation') document.getElementById('step-escalation').classList.remove('hidden');
+            else if (step === 2) { showRequirements(); document.getElementById('step-2').classList.remove('hidden'); }
+            else if (step === 3) { showForm(); document.getElementById('step-3').classList.remove('hidden'); }
+            else if (step === 4) { showDocForm(); document.getElementById('step-4').classList.remove('hidden'); }
+            else if (step === 5) { showOutcome(); document.getElementById('step-5').classList.remove('hidden'); }
+
+            const stepNum = step === '1b' ? 1 : (step === 'escalation' ? 1 : step);
+            const maxStep = (step === 'escalation' || step === '1b') ? 1 : (step === 5 ? 5 : step);
+            const percent = (maxStep / 5) * 100;
+            document.getElementById('progressFill').style.width = percent + '%';
         }
 
-        function showPreCheckerPrompt() {
-            document.getElementById('preCheckerAnswer').value = '';
-        }
-
-        function showSummary() {
-            
-            state.context = `${state.type}-${state.applicant}`;
-
-            const summaries = {
-                'renewal-child': {
-                    title: 'Child passport renewal (under 16)',
-                    identity: ['Child birth certificate', 'Digital passport photo (within 3 months)', 'Your Singpass login'],
-                    supporting: ['Child current passport (if any)', 'Your NRIC or valid passport', 'Parental consent', 'Child details (name, DOB, sex)'],
-                    fees: ['$70 application fee', 'PayNow, card, or debit'],
-                    expectations: ['Processing: 1-2 weeks', 'Children 6+: must collect in person', 'Children <6: parent/guardian collects']
-                },
-                'renewal-self': {
-                    title: 'Adult passport renewal (16+)',
-                    identity: ['Singpass login', 'NRIC number', 'Digital passport photo (within 3 months)'],
-                    supporting: ['Current passport number & expiry', 'Name, DOB, sex', 'Contact details', 'Reason for renewal'],
-                    fees: ['$70 application fee', 'PayNow, card, or debit'],
-                    expectations: ['Processing: 1-2 weeks', 'Passport valid: 10 years', 'Photo: 400×514px, JPG/PNG/HEIC/HEIF, max 8MB']
-                }
+        function showRequirements() {
+            const reqs = {
+                'renewal-self': { title: 'Adult Passport Renewal', items: ['Singpass login', 'NRIC number', 'Digital passport photo (within 3 months)', 'Current passport number & expiry', 'Contact details', 'Reason for renewal', 'Payment: S$70'] },
+                'renewal-child': { title: 'Child Passport Renewal (Under 16)', items: ['Child birth certificate', 'Digital passport photo (within 3 months)', 'Your Singpass login', 'Child current passport (if any)', 'Your NRIC or valid passport', 'Parental consent', 'Child details (name, DOB)', 'Payment: S$70'] },
+                'first-self': { title: 'First Passport Application', items: ['Citizenship certificate', 'Digital passport photo (within 3 months)', 'Your Singpass login', 'Personal details (name, DOB, sex)', 'Contact details', 'Reason', 'Payment: S$70'] }
             };
-            const s = summaries[state.context] || { title: 'Unknown scenario', identity: [], supporting: [], fees: [], expectations: [] };
-            state.requirements = s;
-
-            // Show actual requirements
-            let html = `<div class="summary"><div class="summary-title">What you need: ${s.title}</div>`;
-            html += `<div class="summary-section"><div class="section-label">Identity Documents</div><ul class="section-items">${s.identity.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
-            html += `<div class="summary-section"><div class="section-label">Supporting Documents</div><ul class="section-items">${s.supporting.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
-            html += `<div class="summary-section"><div class="section-label">Fees</div><ul class="section-items">${s.fees.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
-            html += `<div class="summary-section"><div class="section-label">What to Expect</div><ul class="section-items">${s.expectations.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
-            html += `<div class="footer">This is a guide only. ICA officers make all final decisions. Requirements accurate as of 18 November 2026.</div></div>`;
-            document.getElementById('summary-box').innerHTML = html;
+            const r = reqs[state.context] || { title: 'Requirements', items: [] };
+            state.requirements = r;
+            let html = `<div class="section-title">${r.title}</div><ul class="requirements-list">`;
+            r.items.forEach(item => html += `<li>${item}</li>`);
+            html += '</ul>';
+            document.getElementById('requirementsSummary').innerHTML = html;
         }
 
         function showForm() {
+            let html = '<div class="form-group"><label>Your name (synthetic)</label><input type="text" value="Sarah Tan" readonly></div>';
+            html += '<div class="form-group"><label>NRIC (synthetic)</label><input type="text" value="S1234567A" readonly></div>';
             if (state.applicant === 'child') {
-                document.getElementById('childForm').classList.remove('hidden');
-            } else {
-                document.getElementById('childForm').classList.add('hidden');
+                html += '<div class="form-group"><label>Child\'s name (synthetic)</label><input type="text" value="Alex Tan" readonly></div>';
+                html += '<div class="form-group"><label>Child\'s DOB (synthetic)</label><input type="text" value="15 Jan 2022" readonly></div>';
             }
+            document.getElementById('applicationForm').innerHTML = html;
         }
 
-        function showDocSubmissionForm() {
-            const reqs = state.requirements;
-            const allDocs = [
-                ...(reqs.identity || []),
-                ...(reqs.supporting || [])
-            ];
-
+        function showDocForm() {
+            const docs = state.requirements.items.filter(i => !i.includes('Payment') && !i.includes('S$'));
             let html = '';
-            allDocs.forEach((doc, idx) => {
-                html += `
-                    <div class="doc-item">
-                        <div class="doc-label">${doc}</div>
-                        <input type="text" class="doc-input" id="doc${idx}" placeholder="Upload or describe document"
-                            data-doc-name="${doc}">
-                    </div>
-                `;
+            docs.forEach((doc, idx) => {
+                html += `<div class="doc-field"><label>${doc}</label><input type="text" id="doc${idx}" placeholder="Upload or describe document"></div>`;
             });
-            document.getElementById('docSubmissionForm').innerHTML = html;
-            state.allDocs = allDocs;
+            state.allDocs = docs;
+            document.getElementById('documentForm').innerHTML = html;
         }
-
 
         function validateDocuments() {
-            const allDocs = state.allDocs;
             state.validationIssues = [];
-            state.docs = {};
-
-            const issueTypes = {
-                'Digital passport photo (within 3 months)': 'Photo is outside 3-month window',
-                'Child birth certificate': 'Document appears to be a photocopy, not certified',
-                'Parental consent': 'Signature is missing',
-                'Current passport number & expiry': 'Passport expiry date is unclear'
-            };
-
-            allDocs.forEach((doc, idx) => {
-                const value = document.getElementById(`doc${idx}`).value;
-                state.docs[idx] = { name: doc, submitted: value ? true : false };
-
-                if (!value) {
-                    state.validationIssues.push({
-                        doc: doc,
-                        reason: 'Document was not submitted',
-                        context: state.context
-                    });
-                } else if (issueTypes[doc] && Math.random() < 0.6) {
-                    state.validationIssues.push({
-                        doc: doc,
-                        reason: issueTypes[doc],
-                        context: state.context
-                    });
+            state.allDocs.forEach((doc, idx) => {
+                const val = document.getElementById(`doc${idx}`).value;
+                if (!val && Math.random() < 0.5) {
+                    state.validationIssues.push({ doc: doc, reason: 'Not submitted' });
                 }
             });
 
-            step = 9;
-            renderStep();
-        }
-
-        function showValidation() {
-            let html = '';
-
-            if (state.validationIssues.length === 0) {
-                html = `
-                    <div class="success">
-                        <div class="success-title">✓ All documents validated</div>
-                        <div class="success-text">Your documents meet ICA requirements for ${state.context === 'renewal-child' ? 'child renewal' : 'adult renewal'}. Ready to submit.</div>
-                    </div>
-                    <button class="primary" style="width: 100%; margin-top: 16px;" onclick="recordOutcome('submitted_complete')">Submit Application</button>
-                `;
+            if (state.validationIssues.length > 0) {
+                state.outcome = 'flagged';
             } else {
-                html = `
-                    <div class="error">
-                        <div class="error-title">⚠ Issues detected with your documents</div>
-                        <div class="error-text">The following documents have issues:</div>
-                    </div>
-                    <div class="issues-list">
-                `;
-                state.validationIssues.forEach(issue => {
-                    html += `
-                        <div class="issue-item">
-                            <div class="issue-title">• ${issue.doc}</div>
-                            <div class="issue-reason">${issue.reason}</div>
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-                html += `
-                    <div style="margin-top: 16px;">
-                        <p style="font-size: 14px; margin-bottom: 12px;"><strong>What will you do?</strong></p>
-                        <button onclick="recordOutcome('fixed_documents')" style="width: 100%; margin-bottom: 8px;">Go Back & Fix</button>
-                        <button class="danger" style="width: 100%;" onclick="recordOutcome('submitted_with_issues')">Submit Anyway</button>
-                    </div>
-                `;
+                state.outcome = 'complete';
             }
-            document.getElementById('validationResult').innerHTML = html;
-        }
-
-        function recordOutcome(outcome) {
-            state.outcome = outcome;
-            if (outcome === 'fixed_documents') {
-                step = 5;
-            } else {
-                step = 7;
-            }
+            step = 5;
             renderStep();
         }
 
         function showOutcome() {
             let html = '';
-            const contextLabel = state.context === 'renewal-child' ? 'parent-with-child' : 'adult-renewal';
-
-            if (state.outcome === 'submitted_complete') {
-                html = `
-                    <div class="success">
-                        <div class="success-title">Application Submitted</div>
-                        <div class="success-text">Your application has been submitted successfully with all documents in order. Processing time: 1-2 weeks.</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Clarity checkpoint result</div>
-                        <div class="metric-value">${state.clarityPass ? '✓ Pass' : '✗ Fail'}</div>
-                        <div class="metric-note">You ${state.clarityPass ? 'could' : 'could not'} describe ≥2 of 3 core requirements without looking back.</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Behavior path (${contextLabel})</div>
-                        <div class="metric-value">Complete submission</div>
-                        <div class="metric-note">User prepared all documents correctly on first try.</div>
-                    </div>
-                    <p style="font-size: 12px; color: #666; margin-top: 16px;"><strong>Synthetic scenario for testing purposes only.</strong></p>
-                `;
-            } else if (state.outcome === 'fixed_documents') {
-                html = `
-                    <div class="success">
-                        <div class="success-title">Good decision</div>
-                        <div class="success-text">You chose to fix the document issues before submitting. This prevents returns and saves time.</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Clarity checkpoint result</div>
-                        <div class="metric-value">${state.clarityPass ? '✓ Pass' : '✗ Fail'}</div>
-                        <div class="metric-note">You ${state.clarityPass ? 'could' : 'could not'} describe ≥2 of 3 core requirements without looking back.</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Behavior path (${contextLabel})</div>
-                        <div class="metric-value">Fixed documents</div>
-                        <div class="metric-note"><strong>Week 4 riskiest assumption test: ≥75% should choose this path.</strong></div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Expectation gap</div>
-                        <div class="metric-value">Addressed</div>
-                        <div class="metric-note">You said: "${state.preCheckerAnswer || 'no answer'}". You discovered the gap and corrected it.</div>
-                    </div>
-                `;
-            } else if (state.outcome === 'submitted_with_issues') {
-                html = `
-                    <div class="error">
-                        <div class="error-title">Application Submitted (With Issues)</div>
-                        <div class="error-text">Your application was submitted with document issues. It will likely be returned for corrections, adding 6+ days to your wait.</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Clarity checkpoint result</div>
-                        <div class="metric-value">${state.clarityPass ? '✓ Pass' : '✗ Fail'}</div>
-                        <div class="metric-note">You ${state.clarityPass ? 'could' : 'could not'} describe ≥2 of 3 core requirements without looking back.</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Behavior path (${contextLabel})</div>
-                        <div class="metric-value">Submitted anyway</div>
-                        <div class="metric-note"><strong>Week 4 riskiest assumption test: If ≥50% choose this path, assumption is broken.</strong></div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Expectation gap</div>
-                        <div class="metric-value">Not addressed</div>
-                        <div class="metric-note">You said: "${state.preCheckerAnswer || 'no answer'}". Checker showed you need more, but you submitted anyway.</div>
-                    </div>
-                `;
+            if (state.validationIssues.length > 0) {
+                html += '<div class="error-box"><h3>⚠ Issues detected</h3>';
+                state.validationIssues.forEach(issue => {
+                    html += `<div class="error-item"><strong>${issue.doc}</strong>: ${issue.reason}</div>`;
+                });
+                html += '<p style="margin-top: 12px; font-size: 12px;">Please go back and submit all required documents.</p></div>';
+            } else {
+                html += '<div class="success-box"><h3>✓ Ready to submit</h3><p>All documents verified. You can now proceed with your application.</p></div>';
             }
-            document.getElementById('outcomeBox').innerHTML = html;
-        }
-
-        function updateProgress() {
-            const labels = ['Type', 'Applicant', 'Edge case', 'Summary', 'Form', 'Documents', 'Validate', 'Done'];
-            const stepMap = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 3.5: 2};
-            const idx = stepMap[step] || 0;
-            document.getElementById('progress').textContent = `Step ${step <= 3.5 ? Math.ceil(step) : Math.floor(step)} of 8: ${labels[idx]}`;
+            html += '<div class="metric-box"><div class="metric-label">Application Type</div><div class="metric-value">' + (state.context || 'N/A') + '</div></div>';
+            document.getElementById('outcomeContent').innerHTML = html;
         }
 
         function restart() {
-            state = {
-                type: '', applicant: '', edgeCase: '', requirements: null,
-                docs: {}, validationIssues: [], outcome: '', context: ''
-            };
+            state = { type: '', applicant: '', edgeCase: '', context: '', requirements: null, docs: {}, validationIssues: [], outcome: null };
             step = 1;
             renderStep();
         }
