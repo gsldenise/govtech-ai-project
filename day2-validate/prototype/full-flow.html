@@ -88,7 +88,6 @@
         .requirements-list li:last-child { border-bottom: none; }
         .button-group { display: flex; gap: 12px; margin-top: 32px; }
         .btn {
-            flex: 1;
             padding: 14px 20px;
             border: none;
             border-radius: 6px;
@@ -99,12 +98,17 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .btn-primary { background: #0066cc; color: white; }
+        .btn-primary { background: #0066cc; color: white; flex: 1; }
         .btn-primary:hover { background: #0052a3; }
-        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-secondary { background: #f0f0f0; color: #333; flex: 1; }
         .btn-secondary:hover { background: #e0e0e0; }
+        .btn-back { background: #f0f0f0; color: #333; }
+        .btn-back:hover { background: #e0e0e0; }
         .btn-danger { background: #d32f2f; color: white; }
         .btn-danger:hover { background: #b71c1c; }
+        .button-row { display: flex; gap: 12px; margin-top: 24px; }
+        .button-row .btn-primary { flex: 1; }
+        .button-row .btn-back { padding: 14px 16px; min-width: 100px; }
         .success-box { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .success-box h3 { color: #155724; font-size: 16px; margin-bottom: 8px; }
         .success-box p { color: #155724; font-size: 14px; }
@@ -191,29 +195,34 @@
             </div>
 
             <div id="step-2" class="hidden">
-                <div class="step-label">Step 2 of 5</div>
+                <div class="step-label">Step 2 of 4</div>
                 <div class="question">Required documents</div>
                 <div id="requirementsSummary"></div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="goToStep(3)">Continue</button>
+                <div class="button-row">
+                    <button class="btn btn-back" onclick="goToStep('1b')">← Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+                </div>
             </div>
 
             <div id="step-3" class="hidden">
-                <div class="step-label">Step 3 of 5</div>
-                <div class="question">Your details</div>
+                <div class="step-label">Step 3 of 4</div>
+                <div class="question">Your details & documents</div>
                 <div id="applicationForm"></div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="goToStep(4)">Next: Submit Documents</button>
+                <div id="documentForm"></div>
+                <div class="button-row">
+                    <button class="btn btn-back" onclick="goToStep(2)">← Back</button>
+                    <button class="btn btn-primary" onclick="validateDocuments()">Review Application</button>
+                </div>
             </div>
 
             <div id="step-4" class="hidden">
-                <div class="step-label">Step 4 of 5</div>
-                <div class="question">Submit your documents</div>
-                <div id="documentForm"></div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="validateDocuments()">Review Application</button>
-            </div>
-
-            <div id="step-5" class="hidden">
+                <div class="step-label">Step 4 of 4</div>
+                <div class="question">Application review</div>
                 <div id="outcomeContent"></div>
-                <button class="btn btn-secondary" style="width: 100%; margin-top: 24px;" onclick="restart()">Start Over</button>
+                <div class="button-row">
+                    <button class="btn btn-back" onclick="goToStep(3)">← Back</button>
+                    <button class="btn btn-secondary" onclick="restart()">Start Over</button>
+                </div>
             </div>
         </div>
     </div>
@@ -257,7 +266,7 @@
         }
 
         function renderStep() {
-            for (let i = 1; i <= 5; i++) document.getElementById(`step-${i}`)?.classList.add('hidden');
+            for (let i = 1; i <= 4; i++) document.getElementById(`step-${i}`)?.classList.add('hidden');
             document.getElementById('step-1b')?.classList.add('hidden');
             document.getElementById('step-escalation')?.classList.add('hidden');
 
@@ -265,13 +274,12 @@
             else if (step === '1b') document.getElementById('step-1b').classList.remove('hidden');
             else if (step === 'escalation') document.getElementById('step-escalation').classList.remove('hidden');
             else if (step === 2) { showRequirements(); document.getElementById('step-2').classList.remove('hidden'); }
-            else if (step === 3) { showForm(); document.getElementById('step-3').classList.remove('hidden'); }
-            else if (step === 4) { showDocForm(); document.getElementById('step-4').classList.remove('hidden'); }
-            else if (step === 5) { showOutcome(); document.getElementById('step-5').classList.remove('hidden'); }
+            else if (step === 3) { showForm(); showDocForm(); document.getElementById('step-3').classList.remove('hidden'); }
+            else if (step === 4) { showOutcome(); document.getElementById('step-4').classList.remove('hidden'); }
 
             const stepNum = step === '1b' ? 1 : (step === 'escalation' ? 1 : step);
-            const maxStep = (step === 'escalation' || step === '1b') ? 1 : (step === 5 ? 5 : step);
-            const percent = (maxStep / 5) * 100;
+            const maxStep = (step === 'escalation' || step === '1b') ? 1 : (step === 4 ? 4 : step);
+            const percent = (maxStep / 4) * 100;
             document.getElementById('progressFill').style.width = percent + '%';
         }
 
@@ -323,7 +331,7 @@
             } else {
                 state.outcome = 'complete';
             }
-            step = 5;
+            step = 4;
             renderStep();
         }
 
