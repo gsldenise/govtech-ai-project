@@ -151,6 +151,21 @@
         .doc-examples-title { font-weight: 600; font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px; }
         .example-item { font-size: 12px; color: #333; margin-bottom: 6px; padding-left: 16px; position: relative; }
         .example-item:before { content: "✓"; position: absolute; left: 0; color: #4CAF50; font-weight: bold; }
+        .photo-validation { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+        .validation-icon { font-size: 48px; margin: 16px 0; }
+        .validation-status { font-weight: 600; font-size: 14px; margin-bottom: 12px; }
+        .validation-pass { color: #4CAF50; }
+        .validation-fail { color: #d32f2f; }
+        .validation-check { font-size: 12px; color: #333; margin-bottom: 6px; padding-left: 20px; position: relative; }
+        .validation-check.pass { color: #4CAF50; }
+        .validation-check.fail { color: #d32f2f; }
+        .validation-check:before { position: absolute; left: 0; font-weight: bold; }
+        .validation-check.pass:before { content: "✓"; color: #4CAF50; }
+        .validation-check.fail:before { content: "✗"; color: #d32f2f; }
+        .lang-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+        .lang-btn { padding: 8px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        .lang-btn.active { background: #0066cc; color: white; border-color: #0066cc; }
+        .photo-preview { max-width: 200px; max-height: 260px; margin: 12px auto; border: 1px solid #ddd; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -329,6 +344,194 @@
             document.getElementById('applicationForm').innerHTML = html;
         }
 
+        // Multilingual strings for photo validation
+        const i18n = {
+            en: {
+                photo_title: 'Passport Photo Requirements',
+                format: 'File format (PNG, JPG, JPEG, HEIC, HEIF)',
+                dimensions: 'Dimensions (400×514 pixels)',
+                background: 'Background (white/light)',
+                brightness: 'Even brightness',
+                expression: 'Neutral expression, mouth closed',
+                clarity: 'Clear and sharp (not pixelated)',
+                distortion: 'Not distorted',
+                face_centered: 'Face well-centered',
+                single_face: 'Only one face in photo',
+                exif_rotation: 'EXIF orientation handled',
+                validation_result: 'Validation Result',
+                pass: 'Photo meets all requirements ✓',
+                fail: 'Photo does not meet requirements'
+            },
+            ms: {
+                photo_title: 'Keperluan Foto Pasport',
+                format: 'Format fail (PNG, JPG, JPEG, HEIC, HEIF)',
+                dimensions: 'Dimensi (400×514 piksel)',
+                background: 'Latar belakang (putih/terang)',
+                brightness: 'Kecerahan merata',
+                expression: 'Ekspresi neutral, mulut tertutup',
+                clarity: 'Jelas dan tajam (tidak piksel)',
+                distortion: 'Tidak teropong',
+                face_centered: 'Wajah terpusat dengan baik',
+                single_face: 'Hanya satu wajah dalam foto',
+                exif_rotation: 'Orientasi EXIF ditangani',
+                validation_result: 'Hasil Validasi',
+                pass: 'Foto memenuhi semua persyaratan ✓',
+                fail: 'Foto tidak memenuhi persyaratan'
+            },
+            ta: {
+                photo_title: 'பாஸ்போர்ட் புகைப்படத் தேவைகள்',
+                format: 'கோப்பு வடிவம் (PNG, JPG, JPEG, HEIC, HEIF)',
+                dimensions: 'பரிமாணங்கள் (400×514 பிக்சல்)',
+                background: 'பின்னணி (வெள்ளை/ஒளி)',
+                brightness: 'சம பிரகாசம்',
+                expression: 'நடுநிலை வெளிப்பாடு, வாய் மூடியது',
+                clarity: 'தெளிவான மற்றும் கூர்மையான (பிக்சல் செய்யாத)',
+                distortion: 'விকৃதியற்ற',
+                face_centered: 'முகம் நன்கு மையமாக இருக்கிறது',
+                single_face: 'புகைப்படத்தில் ஒரே ஒரு முகம்',
+                exif_rotation: 'EXIF திசைமுखம் கையாளப்பட்டது',
+                validation_result: 'சரிபார்ப்பு முடிவு',
+                pass: 'புகைப்படம் அனைத்து தேவைகளை பூர்த்திசெய்கிறது ✓',
+                fail: 'புகைப்படம் தேவைகளை பூர்த்திசெய்யாது'
+            },
+            zh: {
+                photo_title: '护照照片要求',
+                format: '文件格式 (PNG, JPG, JPEG, HEIC, HEIF)',
+                dimensions: '尺寸 (400×514 像素)',
+                background: '背景 (白色/浅色)',
+                brightness: '均匀亮度',
+                expression: '中性表情，嘴巴闭合',
+                clarity: '清晰锐利（无像素化）',
+                distortion: '无扭曲',
+                face_centered: '脸部居中位置良好',
+                single_face: '照片中仅一张脸',
+                exif_rotation: 'EXIF 方向已处理',
+                validation_result: '验证结果',
+                pass: '照片符合所有要求 ✓',
+                fail: '照片不符合要求'
+            }
+        };
+
+        let currentLang = 'en';
+        let lastValidation = null;
+        let lastValidationImg = null;
+        let lastValidationFile = null;
+
+        function validatePhotoFile(file) {
+            const validation = {
+                format: false,
+                dimensions: false,
+                background: false,
+                brightness: false,
+                expression: false,
+                clarity: false,
+                distortion: false,
+                face_centered: false,
+                single_face: false,
+                exif_rotation: false,
+                all_pass: false
+            };
+
+            // Check format
+            const allowedFormats = ['image/png', 'image/jpeg', 'image/jpg', 'image/heic', 'image/heif'];
+            validation.format = allowedFormats.includes(file.type);
+
+            // Read and analyze image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Check dimensions
+                    validation.dimensions = (img.width === 400 && img.height === 514);
+
+                    // Check background using canvas
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    // Sample corners for background color (should be white/light)
+                    const imgData = ctx.getImageData(0, 0, 10, 10);
+                    const data = imgData.data;
+                    let whitePixels = 0;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i], g = data[i+1], b = data[i+2];
+                        if (r > 200 && g > 200 && b > 200) whitePixels++;
+                    }
+                    validation.background = (whitePixels / (data.length / 4) > 0.7);
+
+                    // Check brightness by analyzing overall luminosity
+                    const fullImgData = ctx.getImageData(0, 0, img.width, img.height);
+                    const fullData = fullImgData.data;
+                    let totalBrightness = 0;
+                    for (let i = 0; i < fullData.length; i += 4) {
+                        const brightness = (fullData[i] + fullData[i+1] + fullData[i+2]) / 3;
+                        totalBrightness += brightness;
+                    }
+                    const avgBrightness = totalBrightness / (fullData.length / 4);
+                    validation.brightness = (avgBrightness > 100); // Even brightness check
+
+                    // Simulate other checks (in production, would use ML models)
+                    validation.expression = Math.random() > 0.3; // 70% pass rate
+                    validation.clarity = Math.random() > 0.2; // 80% pass rate
+                    validation.distortion = Math.random() > 0.1; // 90% pass rate
+                    validation.face_centered = Math.random() > 0.25; // 75% pass rate
+                    validation.single_face = Math.random() > 0.15; // 85% pass rate
+                    validation.exif_rotation = true; // Handled by browser
+
+                    validation.all_pass = Object.values(validation).filter(v => v === true).length === 11;
+
+                    displayPhotoValidation(validation, img, file);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayPhotoValidation(validation, img, file) {
+            lastValidation = validation;
+            lastValidationImg = img;
+            lastValidationFile = file;
+            const lang = i18n[currentLang] || i18n.en;
+            let html = `<div class="photo-validation">
+                <div class="lang-selector">
+                    <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" onclick="currentLang='en'; displayPhotoValidation(lastValidation, lastValidationImg, lastValidationFile)">EN</button>
+                    <button class="lang-btn ${currentLang === 'ms' ? 'active' : ''}" onclick="currentLang='ms'; displayPhotoValidation(lastValidation, lastValidationImg, lastValidationFile)">MS</button>
+                    <button class="lang-btn ${currentLang === 'ta' ? 'active' : ''}" onclick="currentLang='ta'; displayPhotoValidation(lastValidation, lastValidationImg, lastValidationFile)">TA</button>
+                    <button class="lang-btn ${currentLang === 'zh' ? 'active' : ''}" onclick="currentLang='zh'; displayPhotoValidation(lastValidation, lastValidationImg, lastValidationFile)">中文</button>
+                </div>
+                <div style="text-align: center;">
+                    <div class="validation-icon">${validation.all_pass ? '✓' : '✗'}</div>
+                    <div class="validation-status ${validation.all_pass ? 'validation-pass' : 'validation-fail'}">
+                        ${validation.all_pass ? lang.pass : lang.fail}
+                    </div>
+                </div>
+                <img src="${img.src}" alt="Photo preview" class="photo-preview">
+                <div style="margin-top: 16px; font-size: 13px; font-weight: 600; margin-bottom: 8px;">${lang.validation_result}</div>`;
+
+            const checks = [
+                { key: 'format', label: lang.format },
+                { key: 'dimensions', label: lang.dimensions },
+                { key: 'background', label: lang.background },
+                { key: 'brightness', label: lang.brightness },
+                { key: 'expression', label: lang.expression },
+                { key: 'clarity', label: lang.clarity },
+                { key: 'distortion', label: lang.distortion },
+                { key: 'face_centered', label: lang.face_centered },
+                { key: 'single_face', label: lang.single_face },
+                { key: 'exif_rotation', label: lang.exif_rotation }
+            ];
+
+            checks.forEach(check => {
+                const status = validation[check.key] ? 'pass' : 'fail';
+                html += `<div class="validation-check ${status}">${check.label}</div>`;
+            });
+
+            html += '</div>';
+            document.getElementById('photoValidationResult').innerHTML = html;
+        }
+
         function showDocForm() {
             const docs = state.requirements.items.filter(i => !i.includes('Payment') && !i.includes('S$'));
             const examples = {
@@ -349,6 +552,7 @@
             let html = '';
             docs.forEach((doc, idx) => {
                 const ex = examples[doc] || [];
+                const isPhotoField = doc.includes('Digital passport photo');
                 html += `<div class="doc-field">
                     <label>${doc}</label>
                     <div class="doc-examples">
@@ -362,6 +566,7 @@
                         <div id="fileName${idx}" class="file-name-display"></div>
                     </div>
                     <input type="file" id="file${idx}" class="file-upload-input" onchange="handleFileSelect(${idx})">
+                    ${isPhotoField ? `<div id="photoValidationResult"></div>` : ''}
                     <button class="upload-btn" onclick="uploadDocument(${idx})">Upload Document</button>
                 </div>`;
             });
@@ -374,6 +579,11 @@
             if (file) {
                 document.getElementById(`fileName${idx}`).textContent = '✓ ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
                 document.getElementById(`file${idx}`).parentElement.querySelector('.file-upload-box').classList.add('has-file');
+
+                // If this is the passport photo, run validation
+                if (state.allDocs && state.allDocs[idx] && state.allDocs[idx].includes('Digital passport photo')) {
+                    validatePhotoFile(file);
+                }
             }
         }
 
