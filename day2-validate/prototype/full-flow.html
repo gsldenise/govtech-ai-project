@@ -145,19 +145,6 @@
             </div>
 
             <!-- Step 5: Clarity Checkpoint -->
-            <div id="step-5" class="hidden">
-                <div class="section-title">Can you remember?</div>
-                <div class="question">Without looking back at the list, walk me through what you'll prepare before submitting:</div>
-                <div class="form-group">
-                    <label>Describe the documents you'll gather (synthetic scenario)</label>
-                    <input type="text" id="clarityAnswer" placeholder="E.g., child birth cert, my ID, photo..." value="">
-                </div>
-                <div style="font-size: 12px; color: #666; margin-bottom: 16px;">
-                    <strong>Week 4 validation gate:</strong> Pass if you describe ≥2 of 3 core requirements accurately.
-                </div>
-                <button class="primary" style="width: 100%;" onclick="scoreClarityCheckpoint()">Next: Fill Application</button>
-            </div>
-
             <!-- Step 7: Application Form -->
             <div id="step-5" class="hidden">
                 <div class="section-title">Your details (synthetic scenario)</div>
@@ -179,7 +166,7 @@
                         <input type="text" id="childDOB" value="15 Jan 2022" placeholder="DD Mon YYYY">
                     </div>
                 </div>
-                <button class="primary" style="width: 100%;" onclick="step = 6; renderStep();">Next: Submit Documents</button>
+                <button class="primary" style="width: 100%;" onclick="step = 5; renderStep();">Next: Submit Documents</button>
             </div>
 
             <!-- Step 8: Document Submission -->
@@ -206,7 +193,7 @@
     <script>
         let state = {
             type: '', applicant: '', edgeCase: '', requirements: null,
-            clarityPass: false, docs: {}, validationIssues: [], outcome: '', context: ''
+            docs: {}, validationIssues: [], outcome: '', context: ''
         };
         let step = 1;
 
@@ -313,14 +300,6 @@
             state.allDocs = allDocs;
         }
 
-        function scoreClarityCheckpoint() {
-            const answer = document.getElementById('clarityAnswer').value.toLowerCase();
-            // Simple scoring: check if answer mentions ≥2 of 3 core docs
-            const coreTerms = ['birth', 'certificate', 'photo', 'nric', 'singpass', 'passport', 'consent'];
-            const mentionedTerms = coreTerms.filter(term => answer.includes(term)).length;
-            state.clarityPass = mentionedTerms >= 2;
-            goToStep(5);
-        }
 
         function validateDocuments() {
             const allDocs = state.allDocs;
@@ -399,9 +378,9 @@
         function recordOutcome(outcome) {
             state.outcome = outcome;
             if (outcome === 'fixed_documents') {
-                step = 6;
+                step = 5;
             } else {
-                step = 8;
+                step = 7;
             }
             renderStep();
         }
@@ -477,16 +456,16 @@
         }
 
         function updateProgress() {
-            const labels = ['Type', 'Applicant', 'Edge case', 'Summary', 'Clarity', 'Form', 'Documents', 'Validate', 'Done'];
+            const labels = ['Type', 'Applicant', 'Edge case', 'Summary', 'Form', 'Documents', 'Validate', 'Done'];
             const stepMap = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 3.5: 2};
             const idx = stepMap[step] || 0;
-            document.getElementById('progress').textContent = `Step ${step <= 3.5 ? Math.ceil(step) : Math.floor(step)} of 9: ${labels[idx]}`;
+            document.getElementById('progress').textContent = `Step ${step <= 3.5 ? Math.ceil(step) : Math.floor(step)} of 8: ${labels[idx]}`;
         }
 
         function restart() {
             state = {
                 type: '', applicant: '', edgeCase: '', requirements: null,
-                clarityPass: false, docs: {}, validationIssues: [], outcome: '', context: ''
+                docs: {}, validationIssues: [], outcome: '', context: ''
             };
             step = 1;
             renderStep();
