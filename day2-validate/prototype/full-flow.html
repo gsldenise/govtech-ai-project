@@ -126,9 +126,31 @@
         .escalation-box p { color: #856404; font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
         .escalation-box a { color: #0066cc; text-decoration: none; font-weight: 600; }
         .doc-field { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
-        .doc-field label { font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block; }
-        .doc-field input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-        .doc-field input:focus { outline: none; border-color: #0066cc; }
+        .doc-field label { font-weight: 600; font-size: 13px; margin-bottom: 4px; display: block; }
+        .doc-hint { font-size: 11px; color: #999; margin-bottom: 12px; line-height: 1.4; }
+        .file-upload-box {
+            border: 2px dashed #0066cc;
+            border-radius: 6px;
+            padding: 24px;
+            text-align: center;
+            background: #f0f7ff;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .file-upload-box:hover { border-color: #0052a3; background: #e8f2ff; }
+        .file-upload-box.has-file { border-color: #4CAF50; background: #e8f5e9; }
+        .file-upload-icon { font-size: 32px; margin-bottom: 8px; }
+        .file-upload-text { font-weight: 600; font-size: 14px; color: #0066cc; margin-bottom: 4px; }
+        .file-upload-hint { font-size: 12px; color: #666; }
+        .file-upload-input { display: none; }
+        .file-name-display { font-size: 12px; color: #4CAF50; font-weight: 600; margin-bottom: 8px; }
+        .upload-btn { background: #0066cc; color: white; border: none; padding: 10px 16px; border-radius: 4px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .upload-btn:hover { background: #0052a3; }
+        .doc-examples { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+        .doc-examples-title { font-weight: 600; font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px; }
+        .example-item { font-size: 12px; color: #333; margin-bottom: 6px; padding-left: 16px; position: relative; }
+        .example-item:before { content: "✓"; position: absolute; left: 0; color: #4CAF50; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -309,12 +331,59 @@
 
         function showDocForm() {
             const docs = state.requirements.items.filter(i => !i.includes('Payment') && !i.includes('S$'));
+            const examples = {
+                'Child birth certificate': ['Full name and date of birth visible', 'Document number clearly shown', 'Issue date and issuing authority visible'],
+                'Digital passport photo (within 3 months)': ['Face clearly visible', 'White or light background', 'Recent photo (within 3 months)', 'JPG or PNG format'],
+                'Your Singpass login': ['Successfully logged into Singpass app', 'Personal info section visible', 'Contact details confirmed'],
+                'Child current passport (if any)': ['All pages visible', 'No damage or defacement', 'Current expiry date shown'],
+                'Your NRIC or valid passport': ['Front and back sides', 'Clear and legible', 'Not expired'],
+                'Parental consent': ['Signed by parent/guardian', 'Date of signature included', 'Parent/guardian NRIC visible'],
+                'Child details (name, DOB)': ['Full legal name as per birth certificate', 'Date of birth in DD MMM YYYY format', 'Gender/sex clearly stated'],
+                'Citizenship certificate': ['Full name visible', 'Certificate number shown', 'Issue date clear'],
+                'Current passport number & expiry': ['Passport number from current passport', 'Expiry date clearly noted'],
+                'Contact details': ['Valid email address', 'Mobile phone number', 'Residential address'],
+                'Reason for renewal': ['Expiring, Expired, or Out of pages', 'Clearly selected or stated'],
+                'Personal details (name, DOB, sex)': ['Full legal name', 'Date of birth', 'Gender/sex']
+            };
+
             let html = '';
             docs.forEach((doc, idx) => {
-                html += `<div class="doc-field"><label>${doc}</label><input type="text" id="doc${idx}" placeholder="Upload or describe document"></div>`;
+                const ex = examples[doc] || [];
+                html += `<div class="doc-field">
+                    <label>${doc}</label>
+                    <div class="doc-examples">
+                        <div class="doc-examples-title">Document must include:</div>
+                        ${ex.map(e => `<div class="example-item">${e}</div>`).join('')}
+                    </div>
+                    <div class="file-upload-box" onclick="document.getElementById('file${idx}').click()">
+                        <div class="file-upload-icon">📁</div>
+                        <div class="file-upload-text">Click to upload or drag & drop</div>
+                        <div class="file-upload-hint">PDF, JPG, PNG • Max 8MB</div>
+                        <div id="fileName${idx}" class="file-name-display"></div>
+                    </div>
+                    <input type="file" id="file${idx}" class="file-upload-input" onchange="handleFileSelect(${idx})">
+                    <button class="upload-btn" onclick="uploadDocument(${idx})">Upload Document</button>
+                </div>`;
             });
             state.allDocs = docs;
             document.getElementById('documentForm').innerHTML = html;
+        }
+
+        function handleFileSelect(idx) {
+            const file = document.getElementById(`file${idx}`).files[0];
+            if (file) {
+                document.getElementById(`fileName${idx}`).textContent = '✓ ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+                document.getElementById(`file${idx}`).parentElement.querySelector('.file-upload-box').classList.add('has-file');
+            }
+        }
+
+        function uploadDocument(idx) {
+            const file = document.getElementById(`file${idx}`).files[0];
+            if (file) {
+                alert(`"${file.name}" uploaded successfully!`);
+            } else {
+                alert('Please select a file first');
+            }
         }
 
         function validateDocuments() {
