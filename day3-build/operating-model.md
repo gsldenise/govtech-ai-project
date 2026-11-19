@@ -125,6 +125,117 @@
 
 ---
 
+## Incident Response (08:00 Monday Scenario: Agent Sends Wrong Answer)
+
+### Timeline & First Responders
+
+**08:00 — Alert triggered**
+- **First responder:** On-duty EL (or duty engineer)
+- **Detection:** Automated alert (accuracy drop, false rejection spike) OR manual report from OL/PM
+- **Initial action:** Confirm incident is real (not false alarm) — take 5 mins max
+
+**08:05 — Severity Assessment & Go/No-Go Decision**
+
+| Severity | Scenario | First Responder Acts | Authority to Switch Off |
+|----------|----------|---------------------|----------------------|
+| P1 (Critical) | Agent sending wrong answer to ALL users; system trust compromised; >100 applicants affected within last hour | EL: DISABLE AGENT IMMEDIATELY (kill switch) without waiting for approval | EL (immediate authority) |
+| P2 (High) | Agent sending wrong answer to <100 users; accuracy <80%; false rejection spike; affecting <1% of daily volume | EL: Escalate to Sponsor within 15 mins; Sponsor decides disable/continue-with-monitoring | Sponsor (after EL escalation) |
+| P3 (Medium) | Single user complaint; isolated wrong answer; accuracy still >90%; <1 applicant affected | OL/PM: Log, investigate; notify Sponsor within 1 hour | Not disabled; monitoring escalated |
+| P4 (Low) | Suspected issue but unconfirmed; no applicant impact yet | EL: Investigate; no escalation needed if confirmed false alarm | Not disabled |
+
+**Action at 08:05 (assuming P1 — agent sends wrong answer to multiple users):**
+
+**EL: Switch off agent immediately**
+- Set `validation_enabled = false` in config
+- All uploads now: "Validation temporarily unavailable. Please contact support."
+- Log timestamp, reason, who disabled it
+
+**08:05 — Notify Incident War Room**
+
+**First message (EL → Sponsor, PM, OL, CO):**
+- What: Agent validation sending wrong answers
+- When: Started 08:00, discovered 08:05
+- Who: ~[N] applicants affected, ~[N] photos incorrectly rejected/passed
+- Action taken: Agent disabled at 08:05
+- Next: War room call at 08:15
+
+**Sponsor receives first notification within 5 mins of switch-off**
+
+**08:15 — Incident War Room Convenes**
+
+**Attendees:** Sponsor, EL, PM, OL, CO (all required)
+
+**Agenda (max 30 mins):**
+1. What happened? (EL presents logs, accuracy metrics)
+2. Root cause? (EL: bug, data corruption, model drift, config error?)
+3. Scope of damage? (PM/OL: how many affected, what happened to them?)
+4. Compliance check? (CO: any PII exposed, breach?)
+5. Remediation plan (EL)
+6. Comms plan (PM) — what to tell affected applicants?
+7. Sponsor decision: Rollback to previous version? Or fix forward?
+
+**08:45 — Sponsor Communicates to ICA Leadership**
+
+**PM drafts (Sponsor approves) message to ICA Sponsor's boss:**
+- Incident identified and contained (agent disabled)
+- Scope: [N] applicants, [status] of impact
+- Root cause: [preliminary]
+- Timeline to fix/resume: [ETA]
+- No PII leaked: [CO confirmation]
+- Remediation plan: [brief]
+
+**09:00+ — Fix Forward or Rollback**
+
+**If fixable within 2 hours (P2 decision):**
+- EL: Implement fix, test staging, get approval
+- Sponsor: Approve re-enable
+- OL: Monitor; be ready to accept FLAG queue surge
+
+**If not fixable within 2 hours (P1 persistence):**
+- EL: Rollback to last known-good version
+- Sponsor: Re-enable with monitoring
+- PM: Communicate delay to ICA stakeholders
+
+**09:30+ — Post-Incident**
+- EL: Enable agent with increased monitoring (alert on first accuracy drop)
+- PM: Monitor for second wave of complaints
+- Sponsor: Brief ICA leadership on resolution + next steps
+
+---
+
+### Incident Contact Tree (for 08:00 Monday)
+
+**On Duty 08:00 Monday:** 
+- Primary: EL (has kill switch authority)
+- Secondary: PM (monitors metrics)
+- Tertiary: OL (manages officer queue impact)
+
+**Escalation Chain:**
+1. **First responder (EL):** Detects issue → disables agent (if P1) OR escalates to Sponsor (if P2+)
+2. **Sponsor:** Makes disable/continue decision (P2+); approves comms; briefs ICA leadership
+3. **PM:** Drafts applicant comms; manages reputation impact
+4. **OL:** Manages officer workflow disruption (FLAG queue backup, manual review surge)
+5. **CO:** Checks for PII/compliance breach; audit log review
+
+**Who tells the business owner (Sponsor):**
+- **First notification (08:05):** EL (factual: what, when, action taken)
+- **Follow-up (08:15):** EL (technical details), PM (business impact), CO (compliance check)
+- **External comms (~08:45):** PM (drafted), Sponsor (approved + sent to ICA leadership)
+
+---
+
+### Missing Details Now Filled In
+
+✅ **First responder:** On-duty EL  
+✅ **Switch-off authority:** EL (immediate for P1); Sponsor (for P2+)  
+✅ **Severity levels:** P1 (disable immediately), P2 (escalate within 15 mins), P3 (log, investigate), P4 (false alarm)  
+✅ **Timeline:** Alert 08:00 → assess 08:05 → war room 08:15 → comms 08:45 → fix 09:00+  
+✅ **Notification sequence:** EL → Sponsor → PM (applicant comms) → ICA leadership  
+✅ **Containment:** Disable agent, set "temporarily unavailable" message  
+✅ **On-duty contact tree:** EL primary, PM secondary, OL tertiary
+
+---
+
 ## Handoff Milestones
 
 | Milestone | Owner | Go/No-Go Criteria | Next Owner |
