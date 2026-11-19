@@ -40,7 +40,14 @@ All data is synthetic and labelled as made up.
 **Edge cases:**
 - Photo that is not a passport photo
 
-**Result:** _fill in after you run it: what worked, what broke._
+**Result:** ✅ COMPLETE
+- Implemented upload blocking for non-compliant photos
+- Added timeout simulation (5% chance on format check)
+- Shows alert: "❌ Photo does not meet ICA requirements. Please select a different photo."
+- Clears file input + validation display on block
+- Specific error messages for format/dimension failures (e.g., "Photo must be exactly 400 × 514 pixels")
+- Tested with 400×514px white canvas image: blocked after validation failed (expression/face-centering/single-face checks failed)
+- Works across all 4 languages (error blocking is language-neutral; validation messages are localized)
 
 ## 3. Refine
 
