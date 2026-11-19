@@ -258,6 +258,86 @@
 
 ---
 
+## Permissions
+
+**All agent actions listed below with proposed tier and setting. For each, review and update to auto/confirm/block as appropriate.**
+
+**What stress tests showed:** All three stress runs (empty file, malformed MIME, corrupted PNG) were caught at pre-flight stage without attempting pixel analysis, confirming that read/analyze actions execute safely within guardrails.
+
+---
+
+### Read Actions
+
+| Tool / Action | What It Does | Tier | Setting | Proposed |
+|--------|-----------|------|---------|----------|
+| Read uploaded photo file | Load image via FileReader; read binary data | Read | Auto | ✓ |
+| Extract image dimensions | Canvas API: image.width, image.height (pixels) | Read | Auto | ✓ |
+| Extract EXIF metadata | Read EXIF Orientation tag from photo header | Read | Auto | ✓ |
+| Analyze pixel colors | Sample RGB values from corners + face region | Read | Auto | ✓ |
+| Measure brightness | Calculate average luminosity across entire image | Read | Auto | ✓ |
+| Detect faces | Identify face regions (count, position, bounding box) | Read | Auto | ✓ |
+| Access ICA spec reference | Read requirements-mapping.md (static file) | Read | Auto | ✓ |
+| Access multilingual strings | Read language labels from full-flow.html (static) | Read | Auto | ✓ |
+| Verify MIME type whitelist | Check if MIME ∈ {image/png, image/jpeg, image/jpg, image/heic, image/heif} | Read | Auto | ✓ |
+
+**Rationale for Read tier:** These are non-destructive inspections of file metadata and pixel data. Stress tests confirmed MIME validation + size checks block malformed files at pre-flight before any costly analysis.
+
+---
+
+### Draft Actions
+
+| Tool / Action | What It Does | Tier | Setting | Proposed |
+|--------|-----------|------|---------|----------|
+| Generate validation feedback | Compile plain-language reason for pass/fail/flag (e.g., "Face not centered") | Draft | Auto | ✓ |
+| Create officer note | For FLAG cases, write structured note for officer review | Draft | Confirm | ✓ |
+| Calculate confidence score | Compute 0–100% confidence based on checks passed/failed | Draft | Auto | ✓ |
+| Decide outcome | Determine PASS (90%+) / FLAG (75–89%) / FAIL (<75%) | Draft | Auto | ✓ |
+
+**Rationale for Draft tier:** These compose outputs (feedback, notes, scores) but do not persist them. Officer notes should confirm before escalating, since they inform human judgment.
+
+---
+
+### Write Actions
+
+| Tool / Action | What It Does | Tier | Setting | Proposed |
+|--------|-----------|------|---------|----------|
+| Display validation result to applicant | Show ✓/✗ for each of 10 checks; overall result (PASS/FLAG/FAIL) | Write | Auto | ✓ |
+| Update upload button state | Disable upload if FAIL; enable if PASS; conditional on FLAG | Write | Auto | ✓ |
+| Show error message (applicant-facing) | Render "Photo does not meet ICA requirements" in applicant's language | Write | Auto | ✓ |
+| Render photo preview | Display uploaded photo alongside validation results | Write | Auto | ✓ |
+| Log validation event | Write anonymized log: timestamp, photo ID (hash), scenario, language, result, confidence, checks failed | Write | Auto | ✓ |
+
+**Rationale for Write tier:** These modify the DOM or local logs (no backend mutation). Applicant sees only pass/fail/flag + actionable feedback, not confidence scores or internals. Logs contain no PII (photo ID is hashed).
+
+---
+
+### Send Actions
+
+| Tool / Action | What It Does | Tier | Setting | Proposed |
+|--------|-----------|------|---------|----------|
+| Submit validation log to server | POST anonymized validation event to cloud logging service (production) | Send | Confirm | ✓ |
+| Escalate FLAG to officer queue | Route FLAG case + officer note to officer review workflow (backend system) | Send | Confirm | ✓ |
+| Return validation result to application form | JSON: {result, confidence, message, feedback, checks, officer_note} | Send | Auto | ✓ |
+
+**Rationale for Send tier:** These transmit data off-client. Logging and escalation to officer queue should confirm before sending in case of privacy/compliance concerns. Result return to form is auto since form is co-owned (same submission workflow).
+
+---
+
+### Blocked Actions (Irreducible Human Decisions)
+
+| Tool / Action | Reason | Enforcement |
+|--------|-----------|--------|
+| Collect applicant name, NRIC, DOB, passport number | Photo validation must be anonymous | ❌ Block |
+| Store/archive photo file | Analyze only; discard after validation | ❌ Block |
+| Make eligibility determination | "Person should/should not be a citizen" — officer's job | ❌ Block |
+| Override officer judgment | FLAG = officer decides, not agent | ❌ Block |
+| Allow force-upload of failed photo | Upload must remain blocked until resubmit succeeds | ❌ Block |
+| Change validation rules without stakeholder approval | Rules locked to ICA spec; SWE + ICA only | ❌ Block |
+| Leak confidence scores to applicants | Applicants see pass/fail/flag only | ❌ Block |
+| Randomize geometric checks (dimensions, background, face-centered) | Must be deterministic for applicant trust | ❌ Block |
+
+---
+
 ## Health Checks (Operational Oversight)
 
 **Weekly:**
