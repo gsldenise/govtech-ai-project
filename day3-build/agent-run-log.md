@@ -709,6 +709,94 @@ Detect corrupted image that has valid MIME but invalid/incomplete pixel data. Re
 
 ---
 
+---
+
+## Stress Run 1 (Revised): Empty File Caught at Minimum Size Check
+
+**Rule change applied (line 102 of CLAUDE.md):**
+```
+Before: "Verify file size: Is size ≤8 MB?"
+After:  "Verify file size: Is size ≥10 KB and ≤8 MB?"
+```
+
+**Rationale:** Catch incomplete uploads and corrupted files earlier with explicit minimum threshold, reducing false-positive cases where tiny files have unreadable headers.
+
+### Input (same as Stress Run 1)
+```json
+{
+  "file": {
+    "name": null,
+    "size": 0,
+    "type": "",
+    "mime_verified": false,
+    "data": "<binary: empty>"
+  },
+  "scenario": "renewal-self",
+  "language": "en"
+}
+```
+
+### Goal
+With new rule: Reject empty file at file size check (Step 2), not after MIME/format check. Clarify which harness part catches it.
+
+### Plan
+1. **Pre-flight:** Check file size against new bounds (≥10 KB, ≤8 MB)
+2. **Empty file (0 bytes):** Fails minimum size threshold
+3. **Reject immediately:** "File too small. Min 10 KB."
+4. **Log:** Harness part: file size validation (new minimum check)
+
+### Act
+
+**Step 1: File Size Check (NEW RULE)**
+- File size: 0 bytes
+- Minimum required: 10 KB (1024 bytes × 10 = 10,240 bytes)
+- Check: 0 < 10,240? **YES → FAIL**
+- **Verdict:** REJECT immediately. Stop.
+
+**Step 2: Error Message**
+- Error code: `file_too_small`
+- Message: "File too small. Min 10 KB. Photo may be incomplete or corrupted."
+
+### Observe
+
+**Validation rejected at pre-flight (new minimum size check)**
+```json
+{
+  "result": "ERROR",
+  "error_code": "file_too_small",
+  "confidence": 0,
+  "message_en": "❌ File too small. Min 10 KB. Photo may be incomplete or corrupted.",
+  "next_action": "user_action_required",
+  "officer_review": false,
+  "checks": null
+}
+```
+
+### Check
+- ✓ Rejected at step 2 (file size validation), not step 1 (MIME check)
+- ✓ New minimum threshold (10 KB) now enforced
+- ✓ Error message distinguishes from "empty file" (now says "too small")
+- ✓ Provides guidance: "photo may be incomplete or corrupted"
+- ✓ No pixel analysis attempted
+
+### Log Entry
+```
+2026-11-20T10:15:47Z | validation_error | ph_null01 | renewal-self | en | ERROR | 0 | file_too_small | false
+```
+
+**Harness part caught:** `Human Checkpoint #2: File size validation (NEW minimum check)`
+
+**Difference from original Stress Run 1:**
+| Aspect | Original | Revised |
+|--------|----------|---------|
+| **Caught at** | MIME check (Step 1) | File size check (Step 2) |
+| **Error code** | empty_file | file_too_small |
+| **Message** | "File is empty" | "File too small. Min 10 KB" |
+| **Harness part** | Pre-flight MIME verification | Pre-flight file size validation |
+| **Value** | Distinguishes null filename from 0-byte file | Catches common incomplete uploads with clear minimum threshold |
+
+---
+
 **Generated:** 19 November 2026  
 **Scenario:** B  
-**Status:** Agent run log complete + rule fix verified + stress tests added
+**Status:** Agent run log complete + rule fix verified + stress tests added + Stress Run 1 revised with minimum file size rule

@@ -99,8 +99,9 @@ The goal is to reduce the 28% of ICA passport returns that stem from photo non-c
    - If not, FAIL with: "File format not supported. Please upload PNG, JPG, JPEG, HEIC, or HEIF."
    - Stop. Do not attempt to read pixel data.
 
-2. **Verify file size:** Is size ≤8 MB?
-   - If not, FAIL with: "File too large. Max 8 MB."
+2. **Verify file size:** Is size ≥10 KB and ≤8 MB?
+   - If size <10 KB, FAIL with: "File too small. Min 10 KB. Photo may be incomplete or corrupted."
+   - If size >8 MB, FAIL with: "File too large. Max 8 MB."
    - Stop.
 
 3. **Verify image can be read:** Can you load the file and read dimensions?
