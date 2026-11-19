@@ -632,6 +632,16 @@ timestamp | event_type | photo_id | scenario | language | validation_result | co
    - Decision needed: Re-test with real model? Or assume simulated ≈ real?
    - **Question for stakeholders:** Is Week 4 testing sufficient, or must we re-validate with real ML?
 
+8. **How much human oversight of outcome decisions before deployment?**
+   - **Context:** Agent decides PASS/FLAG/FAIL (deterministic, rules locked). This gates whether applicant can upload.
+   - **Risk:** If outcome calculation has a bug → false rejections (good applicants blocked) or false acceptances (bad photos pass).
+   - **Options:**
+     - **Option A: Confirm every outcome** — Human approves before result reaches applicant. Safe but defeats automation (impractical at scale).
+     - **Option B: Confirm outcomes during early deployment only** — First week/month, officer manually spot-checks all PASS and FAIL decisions before they reach applicants. After proving accuracy ≥90%, switch to Auto.
+     - **Option C: Rely on monitoring + rollback** — Auto all outcomes; monitor weekly false-rejection rate; if spike detected (>20% above baseline), disable agent immediately + investigate.
+     - **Option D: Confirm only if confidence is low** — Auto for PASS (90%+) and FAIL (<75%); Confirm for FLAG (75–89%, already escalates to officer).
+   - **Question for stakeholders:** Which oversight model matches your risk tolerance? (A = highest safety, lowest speed; C = highest speed, requires strong monitoring; B/D = hybrid)
+
 ---
 
 **Generated:** 19 November 2026  
