@@ -231,7 +231,7 @@ timestamp | event_type | photo_id | scenario | language | validation_result | co
    - 90% pass rate
    
 8. **Face-centered:** Face in middle ±30px, not off to side
-   - 75% pass rate
+   - 100% pass rate (deterministic: pass if within tolerance, fail if outside)
    
 9. **Single face:** Only one face in photo
    - 85% pass rate
