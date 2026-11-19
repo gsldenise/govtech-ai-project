@@ -67,18 +67,32 @@ Use case: Scenario B · ICA passport applications. Reduce return submissions thr
 
 ## Agent role and guardrails
 
-**What the AI does:**
-- Identifies applicant's situation through branching questions (no identity data collection).
-- Returns tailored summary of requirements (identity documents, supporting docs, fees, what to expect).
-- Validates passport photo format, size, and facial/guideline compliance.
-- Flags applications 75–89% confidence to officer for additional review.
+**What the AI agent decides alone:**
+- Pre-flight file checks (format, size, readability) → reject if fail
+- Strict geometric checks (400×514px exact, white background, brightness) → FAIL if fail
+- ML-simulated checks (expression, clarity, distortion, face-centered, single-face) → include in confidence
+- Outcome determination (PASS ≥90%, FLAG 75–89%, FAIL <75%) → return with specific feedback
+- Anonymous logging (no PII, no photo storage)
 
-**What the AI does NOT do:**
-- Collect or store name, NRIC, passport number, DOB.
-- Make eligibility decisions or imply approval.
-- Override officer judgment on special circumstances or edge cases.
+**What the AI proposes (officer decides):**
+- FLAG cases (confidence 75–89%) → officer reviews + decides: approve, reject, or request resubmit
+- Suspected deepfakes, authenticity uncertain → officer manually inspects
+- Multiple faces, unclear primary → officer clarifies
+- Edge case scenarios (overseas, lost passport, name change) → officer handles per ICA process
+
+**What stays human (irreducible):**
+- Eligibility determination (is this person entitled to a passport?)
+- Special circumstances override (compassionate grounds, exceptions)
+- Photo authenticity judgment (is this a real person or fake?)
+- Application approval (yes/no after full review)
+- System rule changes (ICA + SWE team only)
 
 **Every requirement listed must map to a specific ICA rule.** No synthesised or inferred requirements.
+
+**Confidence logic:**
+- 90% or higher: PASS → submit directly
+- 75–89%: FLAG → submit with officer review required; applicant can resubmit or wait
+- Below 75%: FAIL → block upload; applicant must resubmit with feedback on what to fix
 
 ## Roles and operating model
 
