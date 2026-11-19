@@ -416,8 +416,10 @@
         let lastValidation = null;
         let lastValidationImg = null;
         let lastValidationFile = null;
+        let photoUploadBlocked = false;
 
         function validatePhotoFile(file) {
+            photoUploadBlocked = false;
             const validation = {
                 format: false,
                 dimensions: false,
@@ -436,12 +438,19 @@
             const allowedFormats = ['image/png', 'image/jpeg', 'image/jpg', 'image/heic', 'image/heif'];
             validation.format = allowedFormats.includes(file.type);
 
+            // Simulate timeout (5% chance of timeout failure on format check)
+            if (Math.random() < 0.05) {
+                displayPhotoValidationError('timeout', file);
+                photoUploadBlocked = true;
+                return;
+            }
+
             // Read and analyze image
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    // Check dimensions
+                    // Check dimensions (strict: MUST be exactly 400x514)
                     validation.dimensions = (img.width === 400 && img.height === 514);
 
                     // Check background using canvas
@@ -470,7 +479,7 @@
                         totalBrightness += brightness;
                     }
                     const avgBrightness = totalBrightness / (fullData.length / 4);
-                    validation.brightness = (avgBrightness > 100); // Even brightness check
+                    validation.brightness = (avgBrightness > 100);
 
                     // Simulate other checks (in production, would use ML models)
                     validation.expression = Math.random() > 0.3; // 70% pass rate
@@ -478,9 +487,14 @@
                     validation.distortion = Math.random() > 0.1; // 90% pass rate
                     validation.face_centered = Math.random() > 0.25; // 75% pass rate
                     validation.single_face = Math.random() > 0.15; // 85% pass rate
-                    validation.exif_rotation = true; // Handled by browser
+                    validation.exif_rotation = true;
 
                     validation.all_pass = Object.values(validation).filter(v => v === true).length === 11;
+
+                    // If validation fails, block upload and show specific errors
+                    if (!validation.all_pass) {
+                        photoUploadBlocked = true;
+                    }
 
                     displayPhotoValidation(validation, img, file);
                 };
@@ -489,11 +503,58 @@
             reader.readAsDataURL(file);
         }
 
+        function displayPhotoValidationError(errorType, file) {
+            const errors = {
+                timeout: {
+                    en: 'Upload failed: Connection timeout. Please try again.',
+                    ms: 'Muat naik gagal: Sambungan tamat masa. Sila cuba semula.',
+                    ta: 'பதிவேற்றம் தோல்வி: இணைப்பு காலம் முடிந்தது. மீண்டும் முயற்சி செய்யவும்.',
+                    zh: '上传失败：连接超时。请重试。'
+                }
+            };
+            const lang = i18n[currentLang] || i18n.en;
+            const msg = errors[errorType]?.[currentLang] || errors[errorType]?.en || 'Upload failed';
+            let html = `<div class="photo-validation">
+                <div class="lang-selector">
+                    <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" onclick="currentLang='en'; displayPhotoValidationError('${errorType}', lastValidationFile)">EN</button>
+                    <button class="lang-btn ${currentLang === 'ms' ? 'active' : ''}" onclick="currentLang='ms'; displayPhotoValidationError('${errorType}', lastValidationFile)">MS</button>
+                    <button class="lang-btn ${currentLang === 'ta' ? 'active' : ''}" onclick="currentLang='ta'; displayPhotoValidationError('${errorType}', lastValidationFile)">TA</button>
+                    <button class="lang-btn ${currentLang === 'zh' ? 'active' : ''}" onclick="currentLang='zh'; displayPhotoValidationError('${errorType}', lastValidationFile)">中文</button>
+                </div>
+                <div style="text-align: center;">
+                    <div class="validation-icon" style="color: #d32f2f;">⚠</div>
+                    <div class="validation-status validation-fail">${msg}</div>
+                </div>
+            </div>`;
+            document.getElementById('photoValidationResult').innerHTML = html;
+        }
+
         function displayPhotoValidation(validation, img, file) {
             lastValidation = validation;
             lastValidationImg = img;
             lastValidationFile = file;
             const lang = i18n[currentLang] || i18n.en;
+
+            // Prepare failure reasons for strict checks
+            const failureReasons = {
+                en: {
+                    format: 'File must be PNG, JPG, JPEG, HEIC, or HEIF',
+                    dimensions: 'Photo must be exactly 400 × 514 pixels'
+                },
+                ms: {
+                    format: 'Fail mesti PNG, JPG, JPEG, HEIC, atau HEIF',
+                    dimensions: 'Foto mesti tepat 400 × 514 piksel'
+                },
+                ta: {
+                    format: 'கோப்பு PNG, JPG, JPEG, HEIC அல்லது HEIF ஆக இருக்க வேண்டும்',
+                    dimensions: 'புகைப்படம் சரியாக 400 × 514 பிக்சல் ஆக இருக்க வேண்டும்'
+                },
+                zh: {
+                    format: '文件必须是 PNG、JPG、JPEG、HEIC 或 HEIF',
+                    dimensions: '照片必须恰好是 400 × 514 像素'
+                }
+            };
+
             let html = `<div class="photo-validation">
                 <div class="lang-selector">
                     <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" onclick="currentLang='en'; displayPhotoValidation(lastValidation, lastValidationImg, lastValidationFile)">EN</button>
@@ -525,7 +586,15 @@
 
             checks.forEach(check => {
                 const status = validation[check.key] ? 'pass' : 'fail';
-                html += `<div class="validation-check ${status}">${check.label}</div>`;
+                let displayLabel = check.label;
+
+                // For strict checks (format, dimensions), show specific error reason
+                if (!validation[check.key] && (check.key === 'format' || check.key === 'dimensions')) {
+                    const reasons = failureReasons[currentLang] || failureReasons.en;
+                    displayLabel = reasons[check.key] || check.label;
+                }
+
+                html += `<div class="validation-check ${status}">${displayLabel}</div>`;
             });
 
             html += '</div>';
@@ -589,11 +658,25 @@
 
         function uploadDocument(idx) {
             const file = document.getElementById(`file${idx}`).files[0];
-            if (file) {
-                alert(`"${file.name}" uploaded successfully!`);
-            } else {
+            if (!file) {
                 alert('Please select a file first');
+                return;
             }
+
+            // Check if this is the passport photo field
+            const isPhotoField = state.allDocs && state.allDocs[idx] && state.allDocs[idx].includes('Digital passport photo');
+
+            // If it's a photo field and validation failed, block upload
+            if (isPhotoField && photoUploadBlocked) {
+                alert('❌ Photo does not meet ICA requirements. Please select a different photo.');
+                // Clear the file input
+                document.getElementById(`file${idx}`).value = '';
+                document.getElementById(`fileName${idx}`).textContent = '';
+                document.getElementById(`file${idx}`).parentElement.querySelector('.file-upload-box').classList.remove('has-file');
+                return;
+            }
+
+            alert(`"${file.name}" uploaded successfully!`);
         }
 
         function validateDocuments() {
