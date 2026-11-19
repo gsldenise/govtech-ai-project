@@ -640,7 +640,8 @@ timestamp | event_type | photo_id | scenario | language | validation_result | co
      - **Option B: Confirm outcomes during early deployment only** — First week/month, officer manually spot-checks all PASS and FAIL decisions before they reach applicants. After proving accuracy ≥90%, switch to Auto.
      - **Option C: Rely on monitoring + rollback** — Auto all outcomes; monitor weekly false-rejection rate; if spike detected (>20% above baseline), disable agent immediately + investigate.
      - **Option D: Confirm only if confidence is low** — Auto for PASS (90%+) and FAIL (<75%); Confirm for FLAG (75–89%, already escalates to officer).
-   - **Question for stakeholders:** Which oversight model matches your risk tolerance? (A = highest safety, lowest speed; C = highest speed, requires strong monitoring; B/D = hybrid)
+     - **Option E: A/B test during Week 4 usability test + early deployment** — Split applicants 50/50: Group A gets Auto outcomes; Group B gets Confirm outcomes. Measure false rejection rate, false acceptance rate, officer feedback, applicant satisfaction. Run for 1–2 weeks with real traffic. Flip to whichever group performs better (lower false rejections, same or better accuracy). Risk halved (only 50% affected if auto outcomes are buggy); data-driven decision; can roll back Group A if metrics deteriorate.
+   - **Question for stakeholders:** Which oversight model matches your risk tolerance? (A = highest safety, lowest speed; C = highest speed, requires strong monitoring; B/D/E = hybrid; **E is data-driven + real production test**)
 
 ---
 
