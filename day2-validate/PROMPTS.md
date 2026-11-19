@@ -61,4 +61,13 @@ All data is synthetic and labelled as made up.
 **Edge cases:**
 - Photo that is not a passport photo
 
-**Result:** _fill in after you run it: what worked, what broke._
+**Result:** ✅ COMPLETE
+- Upfront photo guidelines displayed in blue box (10 items, all languages)
+- Failed checks highlighted in red warning box with count (e.g., "⚠ 1 check failed: Face well-centered")
+- All 10 checks shown with pass/fail status (✓/✗)
+- Delete & Re-upload button (🗑) fully functional
+- Clears validation display, resets file input, ready for re-upload
+- Tested with 400×514px image (black circle on white): blocked, 1 check failed (face centering), all 10 checks visible
+- Works across all 4 languages (language buttons re-render validation in selected language)
+- Photo preview embedded in validation result
+- Upload remains blocked until successful re-upload

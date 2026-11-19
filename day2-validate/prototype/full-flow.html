@@ -166,6 +166,12 @@
         .lang-btn { padding: 8px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; }
         .lang-btn.active { background: #0066cc; color: white; border-color: #0066cc; }
         .photo-preview { max-width: 200px; max-height: 260px; margin: 12px auto; border: 1px solid #ddd; border-radius: 4px; }
+        .photo-guidelines { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+        .guidelines-title { font-weight: 600; font-size: 12px; color: #0066cc; text-transform: uppercase; margin-bottom: 8px; }
+        .guideline-item { font-size: 12px; color: #333; margin-bottom: 6px; padding-left: 20px; position: relative; }
+        .guideline-item:before { content: "•"; position: absolute; left: 8px; color: #0066cc; font-weight: bold; }
+        .delete-btn { background: #d32f2f; color: white; border: none; padding: 8px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; cursor: pointer; margin-top: 8px; }
+        .delete-btn:hover { background: #b71c1c; }
     </style>
 </head>
 <body>
@@ -535,7 +541,6 @@
             lastValidationFile = file;
             const lang = i18n[currentLang] || i18n.en;
 
-            // Prepare failure reasons for strict checks
             const failureReasons = {
                 en: {
                     format: 'File must be PNG, JPG, JPEG, HEIC, or HEIF',
@@ -555,6 +560,10 @@
                 }
             };
 
+            // Count failed checks for highlight
+            const failedChecks = Object.entries(validation).filter(([k, v]) => k !== 'all_pass' && v === false).map(([k]) => k);
+            const hasFailures = failedChecks.length > 0;
+
             let html = `<div class="photo-validation">
                 <div class="lang-selector">
                     <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" onclick="currentLang='en'; displayPhotoValidation(lastValidation, lastValidationImg, lastValidationFile)">EN</button>
@@ -570,6 +579,38 @@
                 </div>
                 <img src="${img.src}" alt="Photo preview" class="photo-preview">
                 <div style="margin-top: 16px; font-size: 13px; font-weight: 600; margin-bottom: 8px;">${lang.validation_result}</div>`;
+
+            // Highlight failed checks
+            if (hasFailures) {
+                html += `<div style="background: #ffebee; border: 1px solid #ffcdd2; border-radius: 4px; padding: 8px; margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: #d32f2f; font-weight: 600; margin-bottom: 4px;">⚠ ${failedChecks.length} check${failedChecks.length !== 1 ? 's' : ''} failed:</div>`;
+
+                const checks = [
+                    { key: 'format', label: lang.format },
+                    { key: 'dimensions', label: lang.dimensions },
+                    { key: 'background', label: lang.background },
+                    { key: 'brightness', label: lang.brightness },
+                    { key: 'expression', label: lang.expression },
+                    { key: 'clarity', label: lang.clarity },
+                    { key: 'distortion', label: lang.distortion },
+                    { key: 'face_centered', label: lang.face_centered },
+                    { key: 'single_face', label: lang.single_face },
+                    { key: 'exif_rotation', label: lang.exif_rotation }
+                ];
+
+                failedChecks.forEach(failKey => {
+                    const checkObj = checks.find(c => c.key === failKey);
+                    if (checkObj) {
+                        let displayLabel = checkObj.label;
+                        if (failKey === 'format' || failKey === 'dimensions') {
+                            const reasons = failureReasons[currentLang] || failureReasons.en;
+                            displayLabel = reasons[failKey] || checkObj.label;
+                        }
+                        html += `<div style="font-size: 11px; color: #d32f2f; margin-bottom: 2px;">• ${displayLabel}</div>`;
+                    }
+                });
+                html += `</div>`;
+            }
 
             const checks = [
                 { key: 'format', label: lang.format },
@@ -588,7 +629,6 @@
                 const status = validation[check.key] ? 'pass' : 'fail';
                 let displayLabel = check.label;
 
-                // For strict checks (format, dimensions), show specific error reason
                 if (!validation[check.key] && (check.key === 'format' || check.key === 'dimensions')) {
                     const reasons = failureReasons[currentLang] || failureReasons.en;
                     displayLabel = reasons[check.key] || check.label;
@@ -596,6 +636,11 @@
 
                 html += `<div class="validation-check ${status}">${displayLabel}</div>`;
             });
+
+            // Add delete & re-upload button if photo doesn't pass (Refine stage)
+            if (!validation.all_pass) {
+                html += `<button class="delete-btn" onclick="deleteAndReupload()">🗑 Delete & Re-upload Photo</button>`;
+            }
 
             html += '</div>';
             document.getElementById('photoValidationResult').innerHTML = html;
@@ -618,17 +663,36 @@
                 'Personal details (name, DOB, sex)': ['Full legal name', 'Date of birth', 'Gender/sex']
             };
 
+            // Photo guidelines for Refine stage
+            const photoGuidelines = {
+                en: ['Exactly 400 × 514 pixels', 'File format: PNG, JPG, JPEG, HEIC, or HEIF', 'White or light background', 'Even, uniform brightness', 'Neutral facial expression with mouth closed', 'Clear and sharp (not pixelated)', 'No distortion', 'Face well-centered in photo', 'Only one face in photo', 'Taken within 3 months'],
+                ms: ['Tepat 400 × 514 piksel', 'Format fail: PNG, JPG, JPEG, HEIC, atau HEIF', 'Latar belakang putih atau terang', 'Kecerahan merata dan seragam', 'Ekspresi wajah neutral dengan mulut tertutup', 'Jelas dan tajam (bukan piksel)', 'Tanpa distorsi', 'Wajah terpusat dengan baik dalam foto', 'Hanya satu wajah dalam foto', 'Diambil dalam 3 bulan'],
+                ta: ['சரியாக 400 × 514 பிக்சல்', 'கோப்பு வடிவம்: PNG, JPG, JPEG, HEIC அல்லது HEIF', 'வெள்ளை அல்லது ஒளி பின்னணி', 'சம மற்றும் சீரான பிரகாசம்', 'நடுநிலை முக வெளிப்பாடு வாய் மூடியது', 'தெளிவான மற்றும் கூர்மையான (பிக்சல் செய்யாத)', 'விகৃதி இல்லை', 'முகம் புகைப்படத்தில் நன்கு மையமாக', 'புகைப்படத்தில் ஒரே ஒரு முகம்', '3 மாதத்தில் எடுக்கப்பட்ட'],
+                zh: ['恰好 400 × 514 像素', '文件格式：PNG、JPG、JPEG、HEIC 或 HEIF', '白色或浅色背景', '均匀一致的亮度', '中性面部表情嘴巴闭合', '清晰锐利（无像素化）', '无扭曲', '脸部在照片中居中位置良好', '照片中仅一张脸', '在 3 个月内拍摄']
+            };
+
             let html = '';
             docs.forEach((doc, idx) => {
                 const ex = examples[doc] || [];
                 const isPhotoField = doc.includes('Digital passport photo');
+                const guidelines = photoGuidelines[currentLang] || photoGuidelines.en;
+
                 html += `<div class="doc-field">
                     <label>${doc}</label>
                     <div class="doc-examples">
                         <div class="doc-examples-title">Document must include:</div>
                         ${ex.map(e => `<div class="example-item">${e}</div>`).join('')}
-                    </div>
-                    <div class="file-upload-box" onclick="document.getElementById('file${idx}').click()">
+                    </div>`;
+
+                // Show photo guidelines upfront (Refine stage)
+                if (isPhotoField) {
+                    html += `<div class="photo-guidelines">
+                        <div class="guidelines-title">Photo Requirements:</div>
+                        ${guidelines.map(g => `<div class="guideline-item">${g}</div>`).join('')}
+                    </div>`;
+                }
+
+                html += `<div class="file-upload-box" onclick="document.getElementById('file${idx}').click()">
                         <div class="file-upload-icon">📁</div>
                         <div class="file-upload-text">Click to upload or drag & drop</div>
                         <div class="file-upload-hint">PDF, JPG, PNG • Max 8MB</div>
@@ -656,6 +720,28 @@
             }
         }
 
+        function deleteAndReupload() {
+            // Find the photo field index (index 2 in renewal-self scenario)
+            let photoIdx = -1;
+            state.allDocs.forEach((doc, idx) => {
+                if (doc.includes('Digital passport photo')) {
+                    photoIdx = idx;
+                }
+            });
+
+            if (photoIdx >= 0) {
+                // Clear file, validation, and UI
+                document.getElementById(`file${photoIdx}`).value = '';
+                document.getElementById(`fileName${photoIdx}`).textContent = '';
+                document.getElementById(`file${photoIdx}`).parentElement.querySelector('.file-upload-box').classList.remove('has-file');
+                document.getElementById('photoValidationResult').innerHTML = '';
+                photoUploadBlocked = false;
+
+                // Trigger file picker
+                document.getElementById(`file${photoIdx}`).click();
+            }
+        }
+
         function uploadDocument(idx) {
             const file = document.getElementById(`file${idx}`).files[0];
             if (!file) {
@@ -666,13 +752,15 @@
             // Check if this is the passport photo field
             const isPhotoField = state.allDocs && state.allDocs[idx] && state.allDocs[idx].includes('Digital passport photo');
 
-            // If it's a photo field and validation failed, block upload
+            // If it's a photo field and validation failed, show message (Refine: user has delete button instead)
             if (isPhotoField && photoUploadBlocked) {
-                alert('❌ Photo does not meet ICA requirements. Please select a different photo.');
-                // Clear the file input
-                document.getElementById(`file${idx}`).value = '';
-                document.getElementById(`fileName${idx}`).textContent = '';
-                document.getElementById(`file${idx}`).parentElement.querySelector('.file-upload-box').classList.remove('has-file');
+                alert('⚠ Photo does not meet requirements. Use "Delete & Re-upload" button to try again.');
+                return;
+            }
+
+            // Allow photo uploads if validation passed
+            if (isPhotoField && lastValidation && !lastValidation.all_pass) {
+                alert('⚠ Photo does not meet requirements. Use "Delete & Re-upload" button to try again.');
                 return;
             }
 
