@@ -130,10 +130,10 @@
 | Milestone | Owner | Go/No-Go Criteria | Next Owner |
 |-----------|-------|------------------|------------|
 | **Week 4: Usability Test Complete** | PM | Engagement ≥25% AND clarity ≥75% | PM |
-| **Week 5: Gate 1 Decision** | Sponsor | Test results meet criteria + ICA sign-off | EL |
+| **Week 5: Gate 1 Decision** | PM | Test results meet criteria + ICA sign-off | EL |
 | **Week 6: Production Build Start** | EL | Spec approved, 20 implementation gaps resolved | EL |
 | **Week 8: Staging Ready** | EL | Testing complete, accuracy ≥90%, SLA met | CO |
-| **Week 9: Production Deploy** | Sponsor | Final sign-off, officer training done, rollback plan ready | OL, EL |
+| **Week 9: Production Deploy** | PM, Sponsor | Final sign-off, officer training done, rollback plan ready | OL, EL |
 | **Week 10: Live Validation** | OL, PM | Monitoring live metrics, incident response active | All |
 
 ---
