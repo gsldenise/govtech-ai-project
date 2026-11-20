@@ -90,23 +90,47 @@ The goal is to reduce the 28% of ICA passport returns that stem from photo non-c
 - ❌ Write feedback that implies approval ("Photo is acceptable" = wrong; "Photo meets ICA guidelines" = right)
 - ❌ Leak confidence scores or internal reasoning to applicant (just pass/fail/feedback)
 
+### Upload Button State Management (UI Contract):
+- **PASS outcome:** Enable upload button. Applicant can submit application (photo is locked in).
+- **FLAG outcome:** Enable upload button (conditional). Applicant may resubmit before officer review, or wait for officer decision.
+- **FAIL outcome:** DISABLE upload button immediately. Applicant CANNOT submit with failed photo. Button stays disabled until:
+  - Applicant clicks "Delete & Resubmit" (upload button re-enabled)
+  - New photo is uploaded and passes validation
+  - **IMPORTANT:** Do NOT allow applicant to force-override a FAIL by enabling upload button on demand. Upload button disabled = validation system enforced.
+
 ---
 
 ## Human Checkpoints
 
-### Before you validate:
-1. **Verify file type:** Is MIME type one of {image/png, image/jpeg, image/jpg, image/heic, image/heif}?
+### Before you validate (Pre-Flight):
+
+**STOP 0: Check for PII in submission** (highest priority)
+- Is applicant_name, applicant_nric, applicant_dob, or passport_number present in submission fields?
+   - If YES: REJECT immediately. Return error: "Photo validation is anonymous. Do not submit personal details. Submit photo only."
+   - Do NOT validate photo. Do NOT log submission details. Do NOT proceed.
+   - Disable upload button. User must clear form and re-upload photo file only.
+
+**STOP 1: Verify file type**
+- Is MIME type one of {image/png, image/jpeg, image/jpg, image/heic, image/heif}?
    - If not, FAIL with: "File format not supported. Please upload PNG, JPG, JPEG, HEIC, or HEIF."
    - Stop. Do not attempt to read pixel data.
 
-2. **Verify file size:** Is size ≥10 KB and ≤8 MB?
+**STOP 2: Verify file size**
+- Is size ≥10 KB and ≤8 MB?
    - If size <10 KB, FAIL with: "File too small. Min 10 KB. Photo may be incomplete or corrupted."
    - If size >8 MB, FAIL with: "File too large. Max 8 MB."
    - Stop.
 
-3. **Verify image can be read:** Can you load the file and read dimensions?
+**STOP 3: Verify image can be read and extract dimensions**
+- Can you load the file and read dimensions?
    - If not (corrupted, truncated, unrecognized format), FAIL with: "Unable to read photo. File may be corrupted. Please try again."
    - Stop.
+
+**STOP 4: Verify dimensions are EXACTLY 400×514** (strictest check; fail-fast)
+- Are dimensions exactly 400 pixels wide and 514 pixels tall?
+   - If width ≠ 400 or height ≠ 514, FAIL immediately with: "Dimensions must be exactly 400×514 pixels. Yours: [W]×[H]. ICA backend will reject otherwise."
+   - No tolerance. No rounding. No "close enough."
+   - Stop. Do not continue to any other checks.
 
 ### During validation:
 4. **Strict checks first:** Dimensions, format, background, brightness
@@ -209,11 +233,16 @@ timestamp | event_type | photo_id | scenario | language | validation_result | co
 ## Validation Checklist (10 Points)
 
 ### Strict Checks (deterministic, no tolerance):
+
+**APPLIED AFTER PRE-FLIGHT STOPS 0–4 above**
+
 1. **File format:** PNG, JPG, JPEG, HEIC, or HEIF
    - Fail if not
    
-2. **Dimensions:** Exactly 400 × 514 pixels
-   - Fail if not (no ±5% tolerance; backend will reject anyway)
+2. **Dimensions:** Exactly 400 × 514 pixels (ALREADY CHECKED in pre-flight stop 4; re-verify here)
+   - Fail if width ≠ 400 or height ≠ 514
+   - No ±5% tolerance. No rounding. Backend will reject anything not exact.
+   - Examples: 398×514 = FAIL, 400×512 = FAIL, 402×514 = FAIL, 400×514 = PASS
    
 3. **Background:** White/light (RGB >200 for all channels in corners)
    - Fail if background is dark or colored
@@ -296,6 +325,10 @@ timestamp | event_type | photo_id | scenario | language | validation_result | co
 ## Critical Do-Nots (Scenario B Guardrails)
 
 1. **Do not collect PII.** Reject any submission that includes name, NRIC, DOB. Return: "Photo validation is anonymous. Do not submit personal details."
+   - Check BEFORE validation (pre-flight stop 0)
+   - Check applicant_name, applicant_nric, applicant_dob, passport_number fields
+   - If ANY present: reject immediately, do NOT log these fields, do NOT validate photo
+   - Applicant must clear form and re-upload photo file only
 
 2. **Do not make eligibility decisions.** You validate format/guidelines, not whether person should have a passport. That's for officers.
 
