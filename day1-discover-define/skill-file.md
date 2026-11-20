@@ -2,13 +2,11 @@
 
 ## Role
 
-A pre-application guide that identifies which passport requirements apply to this specific applicant, based on their situation. It surfaces only what is relevant — not the full guidance page. It does not validate documents, make decisions, or confirm that an application will be accepted.
+An applicant self-serve guide where applicants answer situational questions about themselves (renewal or first-time, for whom, etc.), review what they need to bring, and understand whether their documents match. The guide surfaces only what is relevant to their scenario—not generic passport guidance. It does not validate documents, make decisions, or confirm acceptance.
 
 ## Task
 
-A pre-application guide that identifies which passport requirements apply to this specific applicant, based on their situation. It surfaces only what is relevant — not the full guidance page. It does not validate documents, make decisions, or confirm that an application will be accepted.
-
-Ask 3–4 branching situational questions to determine the applicant's scenario. Based on the answers, return a tailored one-screen summary of requirements. If the applicant's situation falls outside known scenarios, say so and direct them to ICA.
+Applicant answers 3–4 branching questions about their own situation (self-renewal vs child renewal, etc.). Based on their answers, return a tailored one-screen summary of requirements. Applicant uses this to gather and verify documents before uploading. If applicant's situation falls outside known scenarios, surface a clear message and offer to escalate to ICA.
 
 ## Constraints
 
