@@ -343,10 +343,10 @@
         function showForm() {
             let html = '<div class="form-group"><label>Your name (synthetic)</label><input type="text" value="Sarah Tan" readonly></div>';
             html += '<div class="form-group"><label>NRIC (synthetic)</label><input type="text" value="S1234567A" readonly></div>';
-            if (state.applicant === 'child') {
-                html += '<div class="form-group"><label>Child\'s name (synthetic)</label><input type="text" value="Alex Tan" readonly></div>';
-                html += '<div class="form-group"><label>Child\'s DOB (synthetic)</label><input type="text" value="15 Jan 2022" readonly></div>';
-            }
+            html += '<div class="form-group"><label>Passport number (synthetic)</label><input type="text" value="E1234567" readonly></div>';
+            html += '<div class="form-group"><label>Expiration date (synthetic)</label><input type="text" value="15 Nov 2028" readonly></div>';
+            html += '<div class="form-group"><label>Birthday (synthetic)</label><input type="text" value="10 Mar 1992" readonly></div>';
+            html += '<div class="form-group"><label>Contact details (synthetic)</label><input type="text" value="sarah.tan@email.com | +65 9123 4567" readonly></div>';
             document.getElementById('applicationForm').innerHTML = html;
         }
 
@@ -647,63 +647,34 @@
         }
 
         function showDocForm() {
-            const docs = state.requirements.items.filter(i => !i.includes('Payment') && !i.includes('S$'));
-            const examples = {
-                'Child birth certificate': ['Full name and date of birth visible', 'Document number clearly shown', 'Issue date and issuing authority visible'],
-                'Digital passport photo (within 3 months)': ['Face clearly visible', 'White or light background', 'Recent photo (within 3 months)', 'JPG or PNG format'],
-                'Your Singpass login': ['Successfully logged into Singpass app', 'Personal info section visible', 'Contact details confirmed'],
-                'Child current passport (if any)': ['All pages visible', 'No damage or defacement', 'Current expiry date shown'],
-                'Your NRIC or valid passport': ['Front and back sides', 'Clear and legible', 'Not expired'],
-                'Parental consent': ['Signed by parent/guardian', 'Date of signature included', 'Parent/guardian NRIC visible'],
-                'Child details (name, DOB)': ['Full legal name as per birth certificate', 'Date of birth in DD MMM YYYY format', 'Gender/sex clearly stated'],
-                'Citizenship certificate': ['Full name visible', 'Certificate number shown', 'Issue date clear'],
-                'Current passport number & expiry': ['Passport number from current passport', 'Expiry date clearly noted'],
-                'Contact details': ['Valid email address', 'Mobile phone number', 'Residential address'],
-                'Reason for renewal': ['Expiring, Expired, or Out of pages', 'Clearly selected or stated'],
-                'Personal details (name, DOB, sex)': ['Full legal name', 'Date of birth', 'Gender/sex']
-            };
-
-            // Photo guidelines for Refine stage
             const photoGuidelines = {
                 en: ['Exactly 400 × 514 pixels', 'File format: PNG, JPG, JPEG, HEIC, or HEIF', 'White or light background', 'Even, uniform brightness', 'Neutral facial expression with mouth closed', 'Clear and sharp (not pixelated)', 'No distortion', 'Face well-centered in photo', 'Only one face in photo', 'Taken within 3 months'],
                 ms: ['Tepat 400 × 514 piksel', 'Format fail: PNG, JPG, JPEG, HEIC, atau HEIF', 'Latar belakang putih atau terang', 'Kecerahan merata dan seragam', 'Ekspresi wajah neutral dengan mulut tertutup', 'Jelas dan tajam (bukan piksel)', 'Tanpa distorsi', 'Wajah terpusat dengan baik dalam foto', 'Hanya satu wajah dalam foto', 'Diambil dalam 3 bulan'],
-                ta: ['சரியாக 400 × 514 பிக்சல்', 'கோப்பு வடிவம்: PNG, JPG, JPEG, HEIC அல்லது HEIF', 'வெள்ளை அல்லது ஒளி பின்னணி', 'சம மற்றும் சீரான பிரகாசம்', 'நடுநிலை முக வெளிப்பாடு வாய் மூடியது', 'தெளிவான மற்றும் கூர்மையான (பிக்சல் செய்யாத)', 'விகৃதி இல்லை', 'முகம் புகைப்படத்தில் நன்கு மையமாக', 'புகைப்படத்தில் ஒரே ஒரு முகம்', '3 மாதத்தில் எடுக்கப்பட்ட'],
+                ta: ['சரியாக 400 × 514 பிக்சல்', 'கோப்பு வடிவம்: PNG, JPG, JPEG, HEIC அல்லது HEIF', 'வெள்ளை அல்லது ஒளி பின்னணி', 'சம மற்றும் சீரான பிரகாசம்', 'நடுநிலை முக வெளிப்பாடு வாய் மூடியது', 'தெளிவான மற்றும் கூர்மையான (பிக்சல் செய்யாத)', 'விகஃதி இல்லை', 'முகம் புகைப்படத்தில் நன்கு மையமாக', 'புகைப்படத்தில் ஒரே ஒரு முகம்', '3 மாதத்தில் எடுக்கப்பட்ட'],
                 zh: ['恰好 400 × 514 像素', '文件格式：PNG、JPG、JPEG、HEIC 或 HEIF', '白色或浅色背景', '均匀一致的亮度', '中性面部表情嘴巴闭合', '清晰锐利（无像素化）', '无扭曲', '脸部在照片中居中位置良好', '照片中仅一张脸', '在 3 个月内拍摄']
             };
 
-            let html = '';
-            docs.forEach((doc, idx) => {
-                const ex = examples[doc] || [];
-                const isPhotoField = doc.includes('Digital passport photo');
-                const guidelines = photoGuidelines[currentLang] || photoGuidelines.en;
+            const guidelines = photoGuidelines[currentLang] || photoGuidelines.en;
+            const idx = 0;
 
-                html += `<div class="doc-field">
-                    <label>${doc}</label>
-                    <div class="doc-examples">
-                        <div class="doc-examples-title">Document must include:</div>
-                        ${ex.map(e => `<div class="example-item">${e}</div>`).join('')}
-                    </div>`;
-
-                // Show photo guidelines upfront (Refine stage)
-                if (isPhotoField) {
-                    html += `<div class="photo-guidelines">
+            let html = `<div class="doc-field">
+                    <label>Digital passport photo (within 3 months)</label>
+                    <div class="photo-guidelines">
                         <div class="guidelines-title">Photo Requirements:</div>
                         ${guidelines.map(g => `<div class="guideline-item">${g}</div>`).join('')}
-                    </div>`;
-                }
-
-                html += `<div class="file-upload-box" onclick="document.getElementById('file${idx}').click()">
+                    </div>
+                    <div class="file-upload-box" onclick="document.getElementById('file${idx}').click()">
                         <div class="file-upload-icon">📁</div>
                         <div class="file-upload-text">Click to upload or drag & drop</div>
-                        <div class="file-upload-hint">PDF, JPG, PNG • Max 8MB</div>
+                        <div class="file-upload-hint">JPG, PNG • Max 8MB</div>
                         <div id="fileName${idx}" class="file-name-display"></div>
                     </div>
                     <input type="file" id="file${idx}" class="file-upload-input" onchange="handleFileSelect(${idx})">
-                    ${isPhotoField ? `<div id="photoValidationResult"></div>` : ''}
-                    <button class="upload-btn" onclick="uploadDocument(${idx})">Upload Document</button>
+                    <div id="photoValidationResult"></div>
+                    <button class="upload-btn" onclick="uploadDocument(${idx})">Upload Photo</button>
                 </div>`;
-            });
-            state.allDocs = docs;
+
+            state.allDocs = ['Digital passport photo (within 3 months)'];
             document.getElementById('documentForm').innerHTML = html;
         }
 
