@@ -102,35 +102,34 @@ The goal is to reduce the 28% of ICA passport returns that stem from photo non-c
 
 ## Human Checkpoints
 
-### Before you validate (Pre-Flight):
+### Pre-Flight Validation (One integrated rule: check everything before any pixel analysis)
 
-**STOP 0: Check for PII in submission** (highest priority)
-- Is applicant_name, applicant_nric, applicant_dob, or passport_number present in submission fields?
-   - If YES: REJECT immediately. Return error: "Photo validation is anonymous. Do not submit personal details. Submit photo only."
-   - Do NOT validate photo. Do NOT log submission details. Do NOT proceed.
-   - Disable upload button. User must clear form and re-upload photo file only.
+**Apply these checks in order. Stop immediately if ANY fails. Do NOT proceed to pixel analysis if pre-flight fails.**
 
-**STOP 1: Verify file type**
-- Is MIME type one of {image/png, image/jpeg, image/jpg, image/heic, image/heif}?
-   - If not, FAIL with: "File format not supported. Please upload PNG, JPG, JPEG, HEIC, or HEIF."
-   - Stop. Do not attempt to read pixel data.
+1. **PII present?** Is applicant_name, applicant_nric, applicant_dob, or passport_number in submission?
+   - If YES: REJECT. Return: "Photo validation is anonymous. Do not submit personal details. Submit photo only." Do NOT validate. Do NOT log PII.
 
-**STOP 2: Verify file size**
-- Is size ≥10 KB and ≤8 MB?
-   - If size <10 KB, FAIL with: "File too small. Min 10 KB. Photo may be incomplete or corrupted."
-   - If size >8 MB, FAIL with: "File too large. Max 8 MB."
-   - Stop.
+2. **File format supported?** Is MIME type one of {image/png, image/jpeg, image/jpg, image/heic, image/heif}?
+   - If NO: FAIL. Return: "File format not supported. Please upload PNG, JPG, JPEG, HEIC, or HEIF."
 
-**STOP 3: Verify image can be read and extract dimensions**
-- Can you load the file and read dimensions?
-   - If not (corrupted, truncated, unrecognized format), FAIL with: "Unable to read photo. File may be corrupted. Please try again."
-   - Stop.
+3. **File size valid?** Is size ≥10 KB and ≤8 MB?
+   - If <10 KB: FAIL. Return: "File too small. Min 10 KB. Photo may be incomplete or corrupted."
+   - If >8 MB: FAIL. Return: "File too large. Max 8 MB."
 
-**STOP 4: Verify dimensions are EXACTLY 400×514** (strictest check; fail-fast)
-- Are dimensions exactly 400 pixels wide and 514 pixels tall?
-   - If width ≠ 400 or height ≠ 514, FAIL immediately with: "Dimensions must be exactly 400×514 pixels. Yours: [W]×[H]. ICA backend will reject otherwise."
-   - No tolerance. No rounding. No "close enough."
-   - Stop. Do not continue to any other checks.
+4. **Image readable?** Can you load the file and read dimensions?
+   - If NO: FAIL. Return: "Unable to read photo. File may be corrupted. Please try again."
+
+5. **Dimensions EXACTLY 400×514?** Are width and height precisely 400 and 514 pixels?
+   - If NO (398×514, 400×512, 402×514, etc.): FAIL. Return: "Dimensions must be exactly 400×514 pixels. Yours: [W]×[H]. ICA backend will reject otherwise." No tolerance.
+
+**If all 5 pre-flight checks pass**, proceed to strict checks (background, brightness) and ML checks (expression, clarity, etc.).
+
+**Upload button state:** 
+- Pre-flight FAIL → DISABLE upload button. Applicant cannot submit.
+- Pre-flight PASS → continue to validation.
+- Validation FAIL → DISABLE upload button. Applicant must delete and resubmit.
+- Validation PASS → ENABLE upload button. Applicant can submit.
+- Validation FLAG → conditional (applicant may resubmit or wait for officer).
 
 ### During validation:
 4. **Strict checks first:** Dimensions, format, background, brightness
@@ -232,17 +231,13 @@ timestamp | event_type | photo_id | scenario | language | validation_result | co
 
 ## Validation Checklist (10 Points)
 
-### Strict Checks (deterministic, no tolerance):
+### Strict Checks (deterministic, no tolerance)
 
-**APPLIED AFTER PRE-FLIGHT STOPS 0–4 above**
+**Applied after pre-flight validation passes (see above)**
 
-1. **File format:** PNG, JPG, JPEG, HEIC, or HEIF
-   - Fail if not
-   
-2. **Dimensions:** Exactly 400 × 514 pixels (ALREADY CHECKED in pre-flight stop 4; re-verify here)
-   - Fail if width ≠ 400 or height ≠ 514
-   - No ±5% tolerance. No rounding. Backend will reject anything not exact.
-   - Examples: 398×514 = FAIL, 400×512 = FAIL, 402×514 = FAIL, 400×514 = PASS
+1. **File format:** Already verified in pre-flight (PNG, JPG, JPEG, HEIC, or HEIF)
+
+2. **Dimensions:** Already verified in pre-flight (exactly 400 × 514 pixels, no tolerance)
    
 3. **Background:** White/light (RGB >200 for all channels in corners)
    - Fail if background is dark or colored

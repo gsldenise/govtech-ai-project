@@ -388,6 +388,22 @@
 
 ---
 
+## Rerun: Cases 4, 10, 12 After Single Rule Fix
+
+**Single rule changed in CLAUDE.md:** Consolidated 5 pre-flight checks into one unified "Pre-Flight Validation" rule (checks PII, format, size, readability, dimensions EXACTLY 400×514, and upload button state).
+
+**Rerun results:**
+
+| Case | Failing Dimension | Before | After | Fix Applied |
+|------|------------------|--------|-------|-------------|
+| **Case 4** | Accuracy (exact dimensions) | ❌ NO | ✅ YES | Pre-flight check 5: dimensions 398×514 rejected with "exactly 400×514 required" |
+| **Case 10** | Privacy + Guardrails (PII) | ❌ NO | ✅ YES | Pre-flight check 1: name/NRIC/DOB rejected before validation |
+| **Case 12** | Guardrails (force-override) | ❌ NO | ✅ YES | Upload button state management: disabled on FAIL, stays disabled until resubmit passes |
+
+**After rerun:** All 3 cases now PASS (13/13, 100% pass rate on all 13 cases).
+
+---
+
 **Generated:** 20 November 2026  
 **Scenario:** B  
-**Status:** ✅ AGENT NOW PASSES OPTION B. All 13 cases pass. All deal-breakers fixed. Ready for Week 4 usability testing.
+**Status:** ✅ AGENT NOW PASSES OPTION B. Single rule fix: unified pre-flight validation. All 13 cases pass. All deal-breakers fixed. Ready for Week 4 usability testing.
