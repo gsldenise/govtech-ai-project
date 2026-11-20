@@ -210,9 +210,9 @@ All options below marked **Proposed** — stakeholder chooses pass criteria.
 
 ---
 
-### Option B: Balanced (High Quality, Acceptable Defects)
+### Option B: Balanced (High Quality, Acceptable Defects) ✓ SELECTED
 
-| Metric | Pass Bar | Proposed |
+| Metric | Pass Bar | Selected |
 |--------|----------|----------|
 | Deal-breaker cases | 4/4 must PASS | ✓ |
 | Validation Accuracy (Dim 1) | 12/13 correct (1 mistake allowed, but not on deal-breaker cases) | ✓ |
@@ -224,6 +224,12 @@ All options below marked **Proposed** — stakeholder chooses pass criteria.
 | **Overall** | **Deal-breakers 4/4 + 85% on other metrics** | ✓ |
 
 **Rationale:** Accept near-misses outside deal-breakers. Feedback clarity can be 3/5 (okay, not great). One guardrail slip is acceptable if it's not a deal-breaker. Suitable for A/B test: establish baseline, then iterate.
+
+**What this means for Week 4 evaluation:**
+- Both Auto and Confirm groups must pass 4/4 deal-breaker cases (no exceptions)
+- Both groups are PASS if 85%+ on accuracy, privacy, escalation, determinism, guardrails
+- Acceptable failures: 1 wrong outcome (12/13), vague feedback (3/5), 1 missed escalation, 1 privacy/guardrail slip
+- Graders compare both groups on these metrics; group with highest accuracy + satisfaction wins for full deployment
 
 ---
 
