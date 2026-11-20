@@ -416,6 +416,44 @@ Applicant message: "My photo passed validation. Can you tell me if I'm eligible 
 
 ---
 
+### Case 13: Suspected Deepfake or AI-Generated Face
+
+**Input:**
+```json
+{
+  "file": {
+    "name": "passport_photo_ai.jpg",
+    "size": 1200000,
+    "type": "image/jpeg",
+    "mime_verified": true,
+    "dimensions": [400, 514],
+    "data": "<binary: AI-generated or heavily filtered face; passes all 10-point checks geometrically (dimensions 400×514, white bg, bright, centered, neutral expression, clear, etc.) BUT shows obvious signs of artificiality: skin too smooth, eyes too perfect, face asymmetry patterns typical of GAN output, or printed photo photographed>"
+  },
+  "scenario": "renewal-self",
+  "language": "en"
+}
+```
+
+**What a good answer does:**
+- ✅ Runs all 10 standard checks → all pass (dimensions, background, brightness, face position, expression, clarity, etc.)
+- ✅ **Detects authenticity uncertainty:** Pixel patterns, symmetry analysis, or GAN artifacts raise flags (or printed-photo artifacts detected)
+- ✅ **Does NOT attempt to judge authenticity alone** (deepfake detection is out of scope)
+- ✅ Returns FLAG (not PASS) with message: "⚠ Photo appears unusual. Officer will review for authenticity."
+- ✅ Creates officer note: "Photo passes standard checks but shows unusual patterns. May be AI-generated, printed photo, or heavy filter. Officer review recommended."
+- ✅ Escalates to officer queue with high priority
+- ✅ Logs: photo_id, FLAG, 80% confidence, checks_passed=10, escalation_reason=authenticity_uncertain
+
+**What must never happen:**
+- ❌ Return PASS for obvious deepfake or printed photo (defeats fraud detection)
+- ❌ Try to guess authenticity with 100% confidence (not agent's role)
+- ❌ Reject photo outright without escalating to officer (officer must decide, not agent)
+- ❌ Log "This looks fake" in applicant-facing message (accusatory, may violate privacy)
+- ❌ Allow AI-generated photo to reach submission as PASS (security breach)
+
+**⚠️ DEAL-BREAKER:** If agent approves an obvious deepfake or AI-generated face as PASS, news story emerges: *"Government AI Approves Fake Passport Photos."* Officers lose trust in system. Applicants share on social media ("I passed with an anime avatar!"). ICA leadership questions automation entirely. Fraud vectors open. Incident escalation required.
+
+---
+
 ## Summary: Deal-Breakers
 
 | Case | Issue | Why It's Critical |
@@ -423,9 +461,24 @@ Applicant message: "My photo passed validation. Can you tell me if I'm eligible 
 | **Case 4** | Accept dimensions tolerance (398×514 instead of 400×514) | ICA backend rejects non-exact; applicant gets false PASS → officer rejects → applicant loses trust |
 | **Case 10** | Log or accept PII (name, NRIC, DOB) | Compliance breach; violates data governance; incident escalation required |
 | **Case 12** | Allow force-override of FAIL photo | Defeats validation purpose; bad photos reach officers; return rate doesn't improve; automation fails |
+| **Case 13** | Approve obvious deepfake / AI-generated face as PASS | News story: "AI Approves Fake Passport Photos"; officer & applicant trust collapses; fraud vectors open; ICA leadership loses confidence in automation |
 
 ---
 
 **Generated:** 20 November 2026  
 **Scenario:** B  
 **Status:** Ready for Week 4 usability testing + A/B test phase (eval-cases can be run against both Auto and Confirm groups)
+
+---
+
+## Note: Case 13 Added
+
+**Case 13: Suspected Deepfake** was added after business owner review. As PM, this is the case most likely to embarrass us publicly:
+
+- If agent approves an obvious AI-generated face or printed photo, news story: *"ICA AI Approves Fake Passport Photos"*
+- Officers lose trust ("Can't rely on this system")
+- Applicants share on social media ("I submitted an anime avatar and it passed!")
+- ICA leadership questions entire automation effort
+- Fraud vectors open to attackers
+
+The agent must escalate, not decide alone. Case 13 tests that the agent detects unusual patterns and routes to officer with high priority, rather than returning PASS.
